@@ -1,0 +1,52 @@
+# Copyright 2024 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+---
+updates:
+  # Github-actions dependencies
+  - directory: "/"
+    package-ecosystem: "github-actions"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "fix"
+
+  # NPM dependencies -- only prompt to update minor versions.
+  - directory: "/"
+    package-ecosystem: "npm"
+    schedule:
+      interval: "weekly"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    commit-message:
+      prefix: "fix"
+
+  # Docker dependencies
+  - directory: "/"
+    package-ecosystem: "docker"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "fix"
+
+  # Terraform dependencies
+  - directory: "/terraform"
+    package-ecosystem: "terraform"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "fix"
+
+version: 2
