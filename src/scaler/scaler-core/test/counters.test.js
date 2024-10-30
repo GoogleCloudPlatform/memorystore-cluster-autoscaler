@@ -13,16 +13,13 @@
  * limitations under the License
  */
 
-const rewire = require('rewire');
 const sinon = require('sinon');
+const Counters = require('../counters.js');
+const CountersBase = require('../../../autoscaler-common/counters-base.js');
 
 describe('#scaler-counters', () => {
-  const counters = rewire('../counters.js');
-
-  const countersBaseStubs = {
-    incCounter: sinon.stub(),
-    recordValue: sinon.stub(),
-  };
+  let baseIncCounter = sinon.stub(CountersBase, 'incCounter');
+  let baseRecordValue = sinon.stub(CountersBase, 'recordValue');
 
   /**
    * @type {import('../../../autoscaler-common/types')
@@ -48,72 +45,57 @@ describe('#scaler-counters', () => {
   };
 
   beforeEach(() => {
-    Object.values(countersBaseStubs).forEach((stub) => stub.reset());
-    counters.__set__('CountersBase', countersBaseStubs);
+    baseIncCounter = sinon.stub(CountersBase, 'incCounter');
+    baseRecordValue = sinon.stub(CountersBase, 'recordValue');
   });
 
   afterEach(() => {
     sinon.reset();
+    sinon.restore();
   });
 
   it('incScalingSuccessCounter uses cluster config to determine counter attributes', async () => {
-    await counters.incScalingSuccessCounter(cluster, 10);
-    sinon.assert.calledWithExactly(
-      countersBaseStubs.incCounter,
-      'scaler/scaling-success',
-      {
-        memorystore_cluster_project_id: 'myProject',
-        memorystore_cluster_instance_id: 'myCluster',
-        scaling_method: 'STEPWISE',
-        scaling_direction: 'SCALE_UP',
-      },
-    );
+    await Counters.incScalingSuccessCounter(cluster, 10);
+    sinon.assert.calledWithExactly(baseIncCounter, 'scaler/scaling-success', {
+      memorystore_cluster_project_id: 'myProject',
+      memorystore_cluster_instance_id: 'myCluster',
+      scaling_method: 'STEPWISE',
+      scaling_direction: 'SCALE_UP',
+    });
   });
 
   it('incScalingSuccessCounter overrides cluster config with parameters', async () => {
-    await counters.incScalingSuccessCounter(cluster, 10, 20, 'DIRECT');
-    sinon.assert.calledWithExactly(
-      countersBaseStubs.incCounter,
-      'scaler/scaling-success',
-      {
-        memorystore_cluster_project_id: 'myProject',
-        memorystore_cluster_instance_id: 'myCluster',
-        scaling_method: 'DIRECT',
-        scaling_direction: 'SCALE_DOWN',
-      },
-    );
+    await Counters.incScalingSuccessCounter(cluster, 10, 20, 'DIRECT');
+    sinon.assert.calledWithExactly(baseIncCounter, 'scaler/scaling-success', {
+      memorystore_cluster_project_id: 'myProject',
+      memorystore_cluster_instance_id: 'myCluster',
+      scaling_method: 'DIRECT',
+      scaling_direction: 'SCALE_DOWN',
+    });
   });
   it('incScalingFailedCounter uses cluster config to determine counter attributes', async () => {
-    await counters.incScalingFailedCounter(cluster, 10);
-    sinon.assert.calledWithExactly(
-      countersBaseStubs.incCounter,
-      'scaler/scaling-failed',
-      {
-        memorystore_cluster_project_id: 'myProject',
-        memorystore_cluster_instance_id: 'myCluster',
-        scaling_method: 'STEPWISE',
-        scaling_direction: 'SCALE_UP',
-      },
-    );
+    await Counters.incScalingFailedCounter(cluster, 10);
+    sinon.assert.calledWithExactly(baseIncCounter, 'scaler/scaling-failed', {
+      memorystore_cluster_project_id: 'myProject',
+      memorystore_cluster_instance_id: 'myCluster',
+      scaling_method: 'STEPWISE',
+      scaling_direction: 'SCALE_UP',
+    });
   });
 
   it('incScalingFailedCounter overrides cluster config with parameters', async () => {
-    await counters.incScalingFailedCounter(cluster, 10, 20, 'DIRECT');
-    sinon.assert.calledWithExactly(
-      countersBaseStubs.incCounter,
-      'scaler/scaling-failed',
-      {
-        memorystore_cluster_project_id: 'myProject',
-        memorystore_cluster_instance_id: 'myCluster',
-        scaling_method: 'DIRECT',
-        scaling_direction: 'SCALE_DOWN',
-      },
-    );
+    await Counters.incScalingFailedCounter(cluster, 10, 20, 'DIRECT');
+    sinon.assert.calledWithExactly(baseIncCounter, 'scaler/scaling-failed', {
+      memorystore_cluster_project_id: 'myProject',
+      memorystore_cluster_instance_id: 'myCluster',
+      scaling_method: 'DIRECT',
+      scaling_direction: 'SCALE_DOWN',
+    });
   });
   it('recordScalingDuration uses cluster config to determine counter attributes', async () => {
-    await counters.recordScalingDuration(60_000, cluster, 10);
+    await Counters.recordScalingDuration(60_000, cluster, 10);
     sinon.assert.calledWithExactly(
-      countersBaseStubs.recordValue,
+      baseRecordValue,
       'scaler/scaling-duration',
       60_000,
       {
@@ -126,9 +108,9 @@ describe('#scaler-counters', () => {
   });
 
   it('recordScalingDuration overrides cluster config with parameters', async () => {
-    await counters.recordScalingDuration(60_000, cluster, 10, 20, 'DIRECT');
+    await Counters.recordScalingDuration(60_000, cluster, 10, 20, 'DIRECT');
     sinon.assert.calledWithExactly(
-      countersBaseStubs.recordValue,
+      baseRecordValue,
       'scaler/scaling-duration',
       60_000,
       {
