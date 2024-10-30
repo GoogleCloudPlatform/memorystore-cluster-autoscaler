@@ -152,6 +152,7 @@ func TestPerProjectEndToEndDeployment(t *testing.T) {
 				"memorystore_cluster_name": clusterName,
 				"memorystore_shard_count":  clusterStartingShards,
 			},
+			NoColor: true,
 		}
 
 		test_structure.SaveTerraformOptions(t, terraformDir, terraformOptions)
