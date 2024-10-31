@@ -143,9 +143,6 @@ The Autoscaler project is based on open source contributions
 
 Please note that this is not an officially supported Google product.
 
-During the Preview period we recommend that you test in non-production
-environments only.
-
 ## Contributing
 
 *   [Contributing guidelines][contributing-guidelines]
