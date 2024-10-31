@@ -23,7 +23,7 @@
     "start-scaler-function": "functions-framework --target=scaleMemorystoreClusterHTTP --port=8081",
     "terraform-fmt": "echo 'Running Terraform fmt'; find . -name '*.tf' -print0 | xargs -0 terraform fmt",
     "terraform-fmt-check": "echo 'Checking Terraform format'; if ! find . -name '*.tf' -print0 | xargs -0 terraform fmt -check; then echo 'Files need reformatting: npm run terraform-fmt'; exit 1; fi",
-    "terraform-validate": "set -e ; package_root=\"$(pwd)\"; for x in gke/unified cloud-functions/distributed/app-project cloud-functions/distributed/autoscaler-project cloud-functions/per-project ; do cd \"$package_root/terraform/$x\" ; echo \"\n\nValidating Terraform in $PWD\" ; terraform init >/dev/null ; terraform validate; done",
+    "terraform-validate": "set -e ; package_root=\"$(pwd)\"; for x in gke/unified cloud-functions/distributed/app-project cloud-functions/distributed/autoscaler-project cloud-functions/per-project ; do cd \"$package_root/terraform/$x\" ; echo \"\n\nValidating Terraform in $PWD\" ; terraform init ; terraform validate; done",
     "test": "NODE_ENV=test nyc --reporter=text mocha --recursive src --extension=.test.js --timeout 10000",
     "test-e2e": "pushd terraform/cloud-functions/per-project/test && go test -run . -timeout 60m --tags=e2e && popd",
     "typecheck": "tsc --project jsconfig.json --maxNodeModuleJsDepth 0 --noEmit",
