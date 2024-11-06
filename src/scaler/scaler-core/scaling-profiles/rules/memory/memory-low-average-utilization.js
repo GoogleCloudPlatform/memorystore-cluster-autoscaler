@@ -15,7 +15,7 @@
 const {basename} = require('path');
 
 /**
- * @fileoverview Rule which triggers when average memory usage is less than 70%
+ * @fileoverview Rule which triggers when average memory usage is less than 50%
  * and no keys are being evicted
  *
  * @type {import('json-rules-engine').RuleProperties}
@@ -27,7 +27,7 @@ module.exports = {
       {
         fact: 'memory_average_utilization',
         operator: 'lessThan',
-        value: 70,
+        value: 50,
       },
       {
         fact: 'maximum_evicted_keys',

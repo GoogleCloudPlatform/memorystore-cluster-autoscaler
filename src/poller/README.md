@@ -103,8 +103,8 @@ npm run validate-config-file -- path/to/config_file
 | `scaleInLimit`           | `undefined`      | Maximum number of shards that can be removed on a single step when scaling with the `LINEAR` method. If `undefined` or `0`, it will not limit the number of shards. |
 | `scaleOutLimit`          | `undefined`      | Maximum number of shards that can be added on a single step when scaling with the `LINEAR` method. If `undefined` or `0`, it will not limit the number of shards. |
 | `minFreeMemoryPercent`   | 30               | Percentage of total memory to maintain as safety (i.e. free, unused) headroom.  |
-| `scaleOutCoolingMinutes` | 5                | Minutes to wait after scaling IN or OUT before a scale OUT event can be processed. |
-| `scaleInCoolingMinutes`  | 30               | Minutes to wait after scaling IN or OUT before a scale IN event can be processed. |
+| `scaleOutCoolingMinutes` | 10               | Minutes to wait after scaling IN or OUT before a scale OUT event can be processed. |
+| `scaleInCoolingMinutes`  | 20               | Minutes to wait after scaling IN or OUT before a scale IN event can be processed. |
 | `stateProjectId`         | `${projectId}`   | The project ID where the Autoscaler state will be persisted. By default it is persisted using [Cloud Firestore][cloud-firestore] in the same project as the Memorystore Cluster instance. |
 | `stateDatabase`          | Object           | An Object that can override the database for managing the state of the Autoscaler. The default database is Firestore. Refer to the [state database](#state-database) for details. |
 | `downstreamPubSubTopic`  | `undefined`      | Set this parameter to `projects/${projectId}/topics/downstream-topic` if you want the the Autoscaler to publish events that can be consumed by downstream applications.  See [Downstream messaging](../scaler/README.md#downstream-messaging) for more information. |

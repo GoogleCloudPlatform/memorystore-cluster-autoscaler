@@ -16,7 +16,7 @@ const {basename} = require('path');
 
 /**
  * @fileoverview Rule which triggers when the CPU utilization is high based
- * on average cpu > 70% and max cpu > 75%
+ * on average cpu > 50% and max cpu > 80%
  *
  * @type {import('json-rules-engine').RuleProperties}
  */
@@ -27,12 +27,12 @@ module.exports = {
       {
         fact: 'cpu_maximum_utilization',
         operator: 'greaterThan',
-        value: 75,
+        value: 80,
       },
       {
         fact: 'cpu_average_utilization',
         operator: 'greaterThan',
-        value: 70,
+        value: 50,
       },
     ],
   },

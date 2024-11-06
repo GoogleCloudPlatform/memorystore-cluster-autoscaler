@@ -59,7 +59,7 @@ const configValidator = new ConfigValidator();
 
 const baseDefaults = {
   scaleOutCoolingMinutes: 10,
-  scaleInCoolingMinutes: 10,
+  scaleInCoolingMinutes: 20,
   minFreeMemoryPercent: 30,
   scalingProfile: 'CPU_AND_MEMORY',
   scalingMethod: 'STEPWISE',

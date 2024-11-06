@@ -16,7 +16,7 @@ const {basename} = require('path');
 
 /**
  * @fileoverview Rule which triggers when the average CPU utilization low
- * based on < 75% average CPU with no evicted keys.
+ * based on < 50% average CPU with no evicted keys.
  *
  * @type {import('json-rules-engine').RuleProperties}
  */
@@ -27,7 +27,7 @@ module.exports = {
       {
         fact: 'cpu_average_utilization',
         operator: 'lessThan',
-        value: 75,
+        value: 50,
       },
       {
         fact: 'maximum_evicted_keys',

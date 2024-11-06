@@ -15,7 +15,7 @@
 const {basename} = require('path');
 
 /**
- * @fileoverview Rule which triggers when average memory usage is > 80%
+ * @fileoverview Rule which triggers when average memory usage is > 70%
  *
  * @type {import('json-rules-engine').RuleProperties}
  */
@@ -26,7 +26,7 @@ module.exports = {
       {
         fact: 'memory_average_utilization',
         operator: 'greaterThan',
-        value: 80,
+        value: 70,
       },
     ],
   },

@@ -26,12 +26,12 @@ module.exports = {
       {
         fact: 'cpu_maximum_utilization',
         operator: 'lessThan',
-        value: 70,
+        value: 60,
       },
       {
         fact: 'cpu_average_utilization',
         operator: 'lessThan',
-        value: 50,
+        value: 40,
       },
       {
         fact: 'maximum_evicted_keys',

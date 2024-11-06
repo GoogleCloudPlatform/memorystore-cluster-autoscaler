@@ -25,3 +25,43 @@ variable "region" {
 variable "memorystore_cluster_name" {
   type = string
 }
+
+variable "cpu_average_threshold_out" {
+  type    = number
+  default = 0.7
+}
+
+variable "cpu_max_threshold_out" {
+  type    = number
+  default = 0.8
+}
+
+variable "cpu_average_threshold_in" {
+  type    = number
+  default = 0.5
+}
+
+variable "cpu_max_threshold_in" {
+  type    = number
+  default = 0.6
+}
+
+variable "memory_average_threshold_out" {
+  type    = number
+  default = 0.7
+}
+
+variable "memory_max_threshold_out" {
+  type    = number
+  default = 0.8
+}
+
+variable "memory_average_threshold_in" {
+  type    = number
+  default = 0.5
+}
+
+variable "memory_max_threshold_in" {
+  type    = number
+  default = 0.6
+}

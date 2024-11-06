@@ -20,6 +20,16 @@ resource "google_monitoring_dashboard" "dashboard" {
   dashboard_json = templatefile("${path.module}/dashboard.json.tftpl", {
     region                   = var.region
     memorystore_cluster_name = var.memorystore_cluster_name
+
+    cpu_average_threshold_out = var.cpu_average_threshold_out
+    cpu_max_threshold_out     = var.cpu_max_threshold_out
+    cpu_average_threshold_in  = var.cpu_average_threshold_in
+    cpu_max_threshold_in      = var.cpu_max_threshold_in
+
+    memory_average_threshold_out = var.memory_average_threshold_out
+    memory_max_threshold_out     = var.memory_max_threshold_out
+    memory_average_threshold_in  = var.memory_average_threshold_in
+    memory_max_threshold_in      = var.memory_max_threshold_in
   })
 
   lifecycle {
