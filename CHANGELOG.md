@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/compare/v1.0.0...v1.0.1) (2024-11-08)
+
+
+### Bug Fixes
+
+* **deps:** update terraform google to v6.10.0 ([#16](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/issues/16)) ([29ed251](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/commit/29ed251f0439623a9f5e650faceba212dbf0882b))
+
 ## 1.0.0 (2024-11-07)
 
 
