@@ -130,21 +130,30 @@ module "workload_identity_otel_collector" {
 }
 
 module "autoscaler-gke" {
-  source                 = "terraform-google-modules/kubernetes-engine/google//modules/beta-autopilot-private-cluster"
-  version                = "34.0.0"
+  source  = "terraform-google-modules/kubernetes-engine/google//modules/private-cluster"
+  version = "34.0.0"
+
   project_id             = var.project_id
   name                   = var.name
   region                 = var.region
   network                = var.network
   subnetwork             = var.subnetwork
+  release_channel        = var.release_channel
   master_ipv4_cidr_block = var.ip_range_master
   ip_range_pods          = var.ip_range_pods
   ip_range_services      = var.ip_range_services
   enable_private_nodes   = true
+  enable_shielded_nodes  = true
+  network_policy         = true
   regional               = true
+
   create_service_account = false
-  deletion_protection    = false
   service_account        = google_service_account.gke_cluster_service_account.email
+  node_metadata          = "GKE_METADATA"
+
+  remove_default_node_pool = true
+  initial_node_count       = 1
+  deletion_protection      = false
 
   master_authorized_networks = [
     {
@@ -152,4 +161,23 @@ module "autoscaler-gke" {
       display_name = "Public"
     },
   ]
+
+  node_pools = [
+    {
+      name               = "autoscaler-pool"
+      machine_type       = var.machine_type
+      min_count          = var.minimum_node_pool_instances
+      max_count          = var.maximum_node_pool_instances
+      auto_upgrade       = true
+      auto_repair        = true
+      enable_secure_boot = true
+      service_account    = google_service_account.gke_cluster_service_account.email
+    },
+  ]
+
+  node_pools_oauth_scopes = {
+    all = [
+      "https://www.googleapis.com/auth/cloud-platform",
+    ]
+  }
 }

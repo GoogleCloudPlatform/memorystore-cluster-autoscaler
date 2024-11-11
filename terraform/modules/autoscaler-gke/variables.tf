@@ -59,6 +59,29 @@ variable "scaler_sa_email" {
   type = string
 }
 
+variable "machine_type" {
+  description = "Type of node to use to run the cluster"
+  default     = "e2-standard-2"
+}
+
+variable "minimum_node_pool_instances" {
+  type        = number
+  description = "Number of node-pool instances to have active"
+  default     = 1
+}
+
+variable "maximum_node_pool_instances" {
+  type        = number
+  description = "Maximum number of node-pool instances to scale to"
+  default     = 3
+}
+
+variable "release_channel" {
+  type        = string
+  description = "(Beta) The release channel of this cluster. Accepted values are `UNSPECIFIED`, `RAPID`, `REGULAR` and `STABLE`. Defaults to `UNSPECIFIED`."
+  default     = "STABLE"
+}
+
 variable "otel_collector_sa_name" {
   type        = string
   description = "The name of the service account and workload identity to be created and used by the OpenTelemetry Collector workload"
