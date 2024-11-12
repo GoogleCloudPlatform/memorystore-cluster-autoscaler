@@ -52,7 +52,7 @@ variable "units" {
 
 variable "min_size" {
   type        = number
-  default     = 3
+  default     = 1
   description = "Minimum size that the Memorystore Cluster can be scaled in to."
 }
 

@@ -63,27 +63,15 @@ describe('#direct.calculateSize', () => {
     assert.equals(calculateScalingDecisionSpy.callCount, 1);
   });
 
-  it('should return 5 when 4 is suggested', async () => {
+  it('should return min 1 when less than 1 is suggested', async () => {
     const cluster = createClusterParameters({
-      currentSize: 3,
-      maxSize: 4,
-      minSize: 1,
+      currentSize: 1,
+      maxSize: 0,
+      minSize: 0,
       scalingMethod: 'DIRECT',
     });
     const size = await calculateSize(cluster);
-    assert.equals(size, 5);
-    assert.equals(calculateScalingDecisionSpy.callCount, 1);
-  });
-
-  it('should return 3 when below 3 is suggested', async () => {
-    const cluster = createClusterParameters({
-      currentSize: 5,
-      maxSize: 2,
-      minSize: 1,
-      scalingMethod: 'DIRECT',
-    });
-    const size = await calculateSize(cluster);
-    assert.equals(size, 3);
+    assert.equals(size, 1);
     assert.equals(calculateScalingDecisionSpy.callCount, 1);
   });
 });

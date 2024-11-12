@@ -26,7 +26,6 @@ const {Engine} = require('json-rules-engine');
 const {AutoscalerDirection} = require('../../../autoscaler-common/types');
 const {
   CLUSTER_SIZE_MIN,
-  CLUSTER_SIZE_INVALID,
 } = require('../../../autoscaler-common/config-parameters');
 
 /**
@@ -315,21 +314,11 @@ function ensureValidClusterSize(cluster, suggestedSize, scalingDirection) {
   }
 
   /*
-   * If the calculated size is an invalid cluster shape of 4 shards:
-   * https://cloud.google.com/memorystore/docs/cluster/cluster-node-specification#unsupported_cluster_shape
-   * Then enforce a size of one greater, i.e. 5 shards, to prevent flapping. As well as this, check for a
-   * cluster size that is too small to prevent an invalid scaling operation. A check for a cluster size that
-   * is too large is not included here because this is dependent on the number of replicas in the cluster.
+   * Check for a cluster size that is too small to prevent an invalid scaling operation.
+   * A check for a cluster size that is too large is not included here because this is
+   * dependent on the number of replicas in the cluster.
    */
-  if (size == CLUSTER_SIZE_INVALID) {
-    size = CLUSTER_SIZE_INVALID + 1;
-    logger.debug({
-      message: `\tModifiying scale ${scalingDirection} to ${size} ${cluster.units} to avoid invalid cluster size of ${CLUSTER_SIZE_INVALID} ${cluster.units}`,
-      projectId: cluster.projectId,
-      regionId: cluster.regionId,
-      clusterId: cluster.clusterId,
-    });
-  } else if (size < CLUSTER_SIZE_MIN) {
+  if (size < CLUSTER_SIZE_MIN) {
     size = CLUSTER_SIZE_MIN;
     logger.debug({
       message: `\tModifiying scale ${scalingDirection} to ${size} ${cluster.units} to ensure minimally valid ${CLUSTER_SIZE_MIN} ${cluster.units}`,

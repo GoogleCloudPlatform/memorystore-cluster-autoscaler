@@ -439,33 +439,13 @@ describe('#ensureValidClusterSize', () => {
     clampedSize.should.equal(15);
   });
 
-  it('should prevent invalid cluster size scaling out', () => {
-    const cluster = createClusterParameters({minSize: 3, maxSize: 10});
-    const clampedSize = ensureValidClusterSize(
-      cluster,
-      4,
-      AutoscalerDirection.OUT,
-    );
-    clampedSize.should.equal(5);
-  });
-
-  it('should prevent invalid cluster size scaling in', () => {
-    const cluster = createClusterParameters({minSize: 3, maxSize: 10});
-    const clampedSize = ensureValidClusterSize(
-      cluster,
-      4,
-      AutoscalerDirection.IN,
-    );
-    clampedSize.should.equal(5);
-  });
-
   it('should prevent scale in below minimum supported cluster size', () => {
-    const cluster = createClusterParameters({minSize: 3, maxSize: 10});
+    const cluster = createClusterParameters({minSize: 1, maxSize: 10});
     const clampedSize = ensureValidClusterSize(
       cluster,
-      2,
+      0,
       AutoscalerDirection.IN,
     );
-    clampedSize.should.equal(3);
+    clampedSize.should.equal(1);
   });
 });

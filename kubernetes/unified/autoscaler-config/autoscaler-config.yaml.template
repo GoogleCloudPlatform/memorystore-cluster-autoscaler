@@ -31,5 +31,5 @@ data:
       scalingProfile: CPU_AND_MEMORY
       scalingMethod: STEPWISE
       units: SHARDS
-      minSize: 3
+      minSize: 1
       maxSize: 10

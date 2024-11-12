@@ -200,55 +200,14 @@ describe('#parseAndEnrichPayload', () => {
         clusterId: 'spanner1',
         scalerPubSubTopic: 'projects/myproject/topics/scaler-topic',
         units: 'SHARDS',
-        minSize: 2,
+        minSize: 0,
       },
     ]);
 
     await parseAndEnrichPayload(payload).should.be.rejectedWith(Error, {
       message:
-        'INVALID CONFIG: minSize (2) is below the minimum cluster size of 3.',
-    });
-  });
-
-  it('should throw if minSize is invalid cluster configuration', async () => {
-    const payload = JSON.stringify([
-      {
-        projectId: 'project1',
-        regionId: 'region1',
-        clusterId: 'spanner1',
-        scalerPubSubTopic: 'projects/myproject/topics/scaler-topic',
-        units: 'SHARDS',
-        minSize: 4,
-      },
-    ]);
-
-    await parseAndEnrichPayload(payload).should.be.rejectedWith(Error, {
-      message:
-        'INVALID CONFIG: minSize is 4 which is an invalid cluster ' +
-        'configuration. Read more: ' +
-        'https://cloud.google.com/memorystore/docs/cluster/' +
-        'cluster-node-specification#unsupported_cluster_shape',
-    });
-  });
-
-  it('should throw if maxSize is invalid cluster configuration', async () => {
-    const payload = JSON.stringify([
-      {
-        projectId: 'project1',
-        regionId: 'region1',
-        clusterId: 'spanner1',
-        scalerPubSubTopic: 'projects/myproject/topics/scaler-topic',
-        units: 'SHARDS',
-        maxSize: 4,
-      },
-    ]);
-
-    await parseAndEnrichPayload(payload).should.be.rejectedWith(Error, {
-      message:
-        'INVALID CONFIG: maxSize is 4 which is an invalid cluster ' +
-        'configuration. Read more: ' +
-        'https://cloud.google.com/memorystore/docs/cluster/' +
-        'cluster-node-specification#unsupported_cluster_shape',
+        'Invalid Autoscaler Configuration parameters:\n' +
+        'MemorystoreConfig/0/minSize must be >= 1',
     });
   });
 

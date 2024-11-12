@@ -28,10 +28,7 @@ const {PubSub} = require('@google-cloud/pubsub');
 const {CloudRedisClusterClient} = require('@google-cloud/redis-cluster');
 const Counters = require('./counters.js');
 const {AutoscalerUnits} = require('../../autoscaler-common/types');
-const {
-  CLUSTER_SIZE_MIN,
-  CLUSTER_SIZE_INVALID,
-} = require('../../autoscaler-common/config-parameters');
+const {CLUSTER_SIZE_MIN} = require('../../autoscaler-common/config-parameters');
 const assertDefined = require('../../autoscaler-common/assert-defined');
 const {version: packageVersion} = require('../../../package.json');
 const {ConfigValidator} = require('./config-validator');
@@ -67,7 +64,7 @@ const baseDefaults = {
 
 const shardDefaults = {
   units: AutoscalerUnits.SHARDS,
-  minSize: 3,
+  minSize: 1,
   maxSize: 10,
   stepSize: 1,
 };
@@ -378,22 +375,6 @@ async function parseAndEnrichPayload(payload) {
       throw new Error(
         `INVALID CONFIG: minSize (${clusters[idx].minSize}) is below the ` +
           `minimum cluster size of ${CLUSTER_SIZE_MIN}.`,
-      );
-    }
-
-    if (clusters[idx].minSize === CLUSTER_SIZE_INVALID) {
-      throw new Error(
-        `INVALID CONFIG: minSize is ${clusters[idx].minSize} which is an ` +
-          `invalid cluster configuration. Read more: ` +
-          `https://cloud.google.com/memorystore/docs/cluster/cluster-node-specification#unsupported_cluster_shape`,
-      );
-    }
-
-    if (clusters[idx].maxSize === CLUSTER_SIZE_INVALID) {
-      throw new Error(
-        `INVALID CONFIG: maxSize is ${clusters[idx].maxSize} which is an ` +
-          `invalid cluster configuration. Read more: ` +
-          `https://cloud.google.com/memorystore/docs/cluster/cluster-node-specification#unsupported_cluster_shape`,
       );
     }
 

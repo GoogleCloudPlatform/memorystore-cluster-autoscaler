@@ -94,7 +94,7 @@ npm run validate-config-file -- path/to/config_file
 | Key                      | Default Value    | Description |
 | ------------------------ | ---------------- | ----------- |
 | `units`                  | `SHARDS`         | Specifies the units for capacity. Currently `SHARDS` is the only valid unit. |
-| `minSize`                | 3                | Minimum number of Memorystore Cluster shards that the instance can be scaled IN to. |
+| `minSize`                | 1                | Minimum number of Memorystore Cluster shards that the instance can be scaled IN to. |
 | `maxSize`                | 10               | Maximum number of Memorystore Cluster shards that the instance can be scaled OUT to. |
 | `scalingProfile`         | `CPU_AND_MEMORY` | Scaling profiles that should be used. Options are: `CPU_AND_MEMORY`, `CPU`, `MEMORY`, or `CUSTOM`. See the [scaling profiles section][autoscaler-scaling-profiles] in the Scaler component page for more information. |
 | `scalingMethod`          | `STEPWISE`       | Scaling method that should be used. Options are: `STEPWISE`, `DIRECT` and `LINEAR`. See the [scaling methods section][autoscaler-scaler-methods] in the Scaler component page for more information. |

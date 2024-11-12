@@ -264,9 +264,6 @@ The Scaler component supports two scaling methods out of the box:
     method used by the Scaler. It suggests adding or removing shards
     using a fixed step amount defined by the parameter `stepSize`.
 
-    Note: If `stepSize` is set to 1, then it will never scale in below 5 shards.
-    This is because [clusters of 4 shards are not supported][invalid-cluster-size].
-
 *   [DIRECT](scaler-core/scaling-methods/direct.js): This method suggests
     scaling to the number of shards specified by the `maxSize` parameter. It
     does NOT take in account the current utilization metrics. It is useful
@@ -285,10 +282,6 @@ The Scaler component supports two scaling methods out of the box:
     in the shard count in a single iteration will not exceed by these limits
     when scaling in or out respectively.
 
-    > **NOTE**
-    > Scaling to 4 shards is not possible. This is because
-    > [clusters of 4 shards are not supported][invalid-cluster-size].
-
 The selected scaling method will produce a suggested size to which the
 cluster should be scaled. This suggested size then undergoes some final checks
 and may be adjusted prior to the actual scaling request. These are detailed in
@@ -305,7 +298,6 @@ follows:
     custom-configured percentage headroom
     (see [minFreeMemoryPercent](../poller/README.md#configuration-parameters)).
 2.  Ensure it is within the configured minimum and maximum cluster sizes.
-3.  Ensure it is a [valid cluster size][invalid-cluster-size].
 
 As a result of the above checks, the suggested size may be adjusted before
 the final scaling request is made to the Memorystore API.
@@ -460,7 +452,6 @@ you can follow [this example][pub-sub-receive-proto].
 [base-64-decode]: https://www.base64decode.org/
 [charts-and-alerts]: https://cloud.google.com/logging/docs/logs-based-metrics#monitoring
 [directly-proportional]: https://en.wikipedia.org/wiki/Proportionality_(mathematics)#Direct_proportionality
-[invalid-cluster-size]: https://cloud.google.com/memorystore/docs/cluster/cluster-node-specification#unsupported_cluster_shap
 [log-based-metrics]: https://cloud.google.com/logging/docs/logs-based-metrics
 [notification-channels]: https://cloud.google.com/monitoring/support/notification-options
 [proto-field-numbers]: https://protobuf.dev/programming-guides/proto3/#assigning

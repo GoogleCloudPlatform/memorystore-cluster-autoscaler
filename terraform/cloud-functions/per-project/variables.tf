@@ -29,7 +29,7 @@ variable "memorystore_cluster_name" {
 
 variable "memorystore_shard_count" {
   type    = number
-  default = 3
+  default = 1
 }
 
 variable "memorystore_replica_count" {

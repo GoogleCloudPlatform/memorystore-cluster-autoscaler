@@ -15,10 +15,8 @@
 
 /** @fileoverview Provides common constants regarding Autoscaler setup. */
 
-const CLUSTER_SIZE_MIN = 3;
-const CLUSTER_SIZE_INVALID = 4;
+const CLUSTER_SIZE_MIN = 1;
 
 module.exports = {
   CLUSTER_SIZE_MIN,
-  CLUSTER_SIZE_INVALID,
 };
