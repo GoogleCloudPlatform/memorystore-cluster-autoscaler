@@ -127,8 +127,8 @@ func TestPerProjectEndToEndDeployment(t *testing.T) {
 		schedulerJobTfOutput  = "scheduler_job_id"
 		clusterName           = "autoscaler-test"
 		clusterRegion         = "us-central1"
-		clusterStartingShards = 3
-		clusterTargetShards   = 5 // Skip invalid 4-shard cluster shape
+		clusterStartingShards = 1
+		clusterTargetShards   = 3
 	)
 
 	var config TestConfig
@@ -160,8 +160,12 @@ func TestPerProjectEndToEndDeployment(t *testing.T) {
 	})
 
 	defer test_structure.RunTestStage(t, "teardown", func() {
+		logger.Log(t, "TEST STAGE: TEARDOWN")
+		logger.Log(t, "----------------------------------------------------------")
 		terraformOptions := test_structure.LoadTerraformOptions(t, terraformDir)
 		terraform.Destroy(t, terraformOptions)
+		logger.Log(t, "----------------------------------------------------------")
+		logger.Log(t, "TEST STAGE: TEARDOWN COMPLETED")
 	})
 
 	test_structure.RunTestStage(t, "import", func() {
@@ -173,12 +177,18 @@ func TestPerProjectEndToEndDeployment(t *testing.T) {
 	})
 
 	test_structure.RunTestStage(t, "apply", func() {
+		logger.Log(t, "TEST STAGE: TERRAFORM APPLY")
+		logger.Log(t, "----------------------------------------------------------")
 		terraformOptions := test_structure.LoadTerraformOptions(t, terraformDir)
 		terraform.ApplyAndIdempotent(t, terraformOptions)
+		logger.Log(t, "----------------------------------------------------------")
+		logger.Log(t, "TEST STAGE: TERRAFORM APPLY COMPLETED")
+
 	})
 
 	test_structure.RunTestStage(t, "validate", func() {
-
+		logger.Log(t, "TEST STAGE: VALIDATE")
+		logger.Log(t, "----------------------------------------------------------")
 		// Retries and sleep duration for a total maximum of 15 minutes timeout per operation
 		const retries = 30
 		const sleepBetweenRetries = time.Second * 30
@@ -202,5 +212,7 @@ func TestPerProjectEndToEndDeployment(t *testing.T) {
 		assert.Nil(t, waitForMemorystoreClusterShards(t, clusterClient, clusterId, clusterStartingShards, retries, sleepBetweenRetries))
 		assert.Nil(t, setAutoscalerConfigMinShards(t, schedulerClient, schedulerJobId, clusterTargetShards))
 		assert.Nil(t, waitForMemorystoreClusterShards(t, clusterClient, clusterId, clusterTargetShards, retries, sleepBetweenRetries))
+		logger.Log(t, "----------------------------------------------------------")
+		logger.Log(t, "TEST STAGE: VALIDATE COMPLETED")
 	})
 }
