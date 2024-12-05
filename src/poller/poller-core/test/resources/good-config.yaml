@@ -41,3 +41,6 @@ data:
       minSize: 5
       maxSize: 30
       scalingMethod: STEPWISE
+      metrics:
+      - name: my_custom_metric
+        filter: metric.type="redis.googleapis.com/cluster/stats/metric"

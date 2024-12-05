@@ -28,6 +28,13 @@
 *   [Configuration parameters](#configuration-parameters)
     *   [Required](#required)
     *   [Optional](#optional)
+*   [Metrics](#metrics)
+*   [Custom metrics](#custom-metrics)
+*   [Metrics parameters](#metrics-parameters)
+    *   [Selectors](#selectors)
+    *   [Parameters](#parameters)
+    *   [Example](#example)
+*   [State Database](#state-database)
 *   [Example JSON configuration for Cloud Run functions](#example-json-configuration-for-cloud-run-functions)
 *   [Example YAML ConfigMap for Kubernetes deployment](#example-yaml-configmap-for-kubernetes-deployment)
 
@@ -107,7 +114,91 @@ npm run validate-config-file -- path/to/config_file
 | `scaleInCoolingMinutes`  | 20               | Minutes to wait after scaling IN or OUT before a scale IN event can be processed. |
 | `stateProjectId`         | `${projectId}`   | The project ID where the Autoscaler state will be persisted. By default it is persisted using [Cloud Firestore][cloud-firestore] in the same project as the Memorystore Cluster instance. |
 | `stateDatabase`          | Object           | An Object that can override the database for managing the state of the Autoscaler. The default database is Firestore. Refer to the [state database](#state-database) for details. |
+| `metrics`                | Array            | Array of objects to represent the metrics used to decide when the Memorystore Cluster instance should be scaled IN or OUT. Refer to the [metrics definition table](#metrics-parameters) to see the fields used for defining metrics. |
 | `downstreamPubSubTopic`  | `undefined`      | Set this parameter to `projects/${projectId}/topics/downstream-topic` if you want the the Autoscaler to publish events that can be consumed by downstream applications.  See [Downstream messaging](../scaler/README.md#downstream-messaging) for more information. |
+
+## Metrics
+
+The Autoscaler determines the number of shards to be added to or subtracted
+from an instance based on the [best practices][best-practices] for CPU and
+memory utilization metrics, and includes rules for scaling based on these.
+
+The Autoscaler monitors the workload of an instance by
+polling the time series of the following:
+
+*   `redis.googleapis.com/cluster/cpu/average_utilization`
+*   `redis.googleapis.com/cluster/cpu/maximum_utilization`
+*   `redis.googleapis.com/cluster/memory/average_utilization`
+*   `redis.googleapis.com/cluster/memory/maximum_utilization`
+
+By default, the following metrics will prevent scale-in operations if their
+value is greater than zero:
+
+*   `redis.googleapis.com/cluster/stats/average_expired_keys`
+*   `redis.googleapis.com/cluster/stats/maximum_expired_keys`
+
+Google recommends initially using the provided metrics and rules unchanged.
+However, in some cases you may want to define custom rules based on metrics in
+addition to the default metrics listed above.
+
+## Custom metrics
+
+To create a custom metric, add the `metrics` parameter to your configuration
+specifying the required fields. `name` and `filter` are required, `reducer` and
+`aligner` and `period` are defaulted but can also be specified in the metric
+definition for more advanced use cases. For further details on these parameters,
+please see the links in the tables below.
+
+## Metrics parameters
+
+This table describes the objects used to define metrics. These can be provided
+in the configuration objects to customize the metrics used to autoscale your
+Memorystore instances.
+
+### Selectors
+
+| Key                   | Description |
+| --------------------- | ----------- |
+| `name`                | A unique name of the for the metric to be evaulated. |
+| `filter`              | The [metric][metrics] and [filter][time-series-filter] that should be used when querying for data. The Autoscaler will automatically add the filter expressions for Memorystore resources and project ID. |
+
+Note that the `name` parameter must not match one of the default metrics:
+
+*   `cpu_maximum_utilization`
+*   `cpu_average_utilization`
+*   `memory_maximum_utilization`
+*   `memory_average_utilization`
+*   `maximum_evicted_keys`
+*   `average_evicted_keys`
+
+### Parameters
+
+Having properly defined metrics is critical to the opertion of the
+Autoscaler. Please refer to
+[Filtering and aggregation][filtering-and-aggregation] for a complete discussion
+on building metric filters and aggregating data points.
+
+| Key                        | Default      | Description |
+| -------------------------- | ------------ | ----------- |
+| `reducer`                  | `REDUCE_SUM` | The reducer specifies how the data points should be aggregated when querying for metrics, typically `REDUCE_SUM`. For more details please refer to [Alert Policies - Reducer][alertpolicy-reducer] documentation. |
+| `aligner`                  | `ALIGN_MAX`  | The aligner specifies how the data points should be aligned in the time series, typically `ALIGN_MAX`. For more details please refer to [Alert Policies - Aligner][alertpolicy-aligner] documentation. |
+| `period`                   | 60           | Defines the period of time in units of seconds at which aggregation takes place. Typically the period should be 60. |
+
+### Example
+
+An example of a custom metric is as follows:
+
+```json
+"metrics": [
+  {
+    "name": "my_expired_keys",
+    "filter": "metric.type=\"redis.googleapis.com/cluster/stats/average_expired_keys\""
+  }
+]
+```
+
+Note that to use your custom metric, you will need to incorporate it into a
+custom scaling profile using a [custom rule set][custom-rule-set].
 
 ## State Database
 
@@ -211,9 +302,16 @@ data:
 
 <!-- LINKS: https://www.markdownguide.org/basic-syntax/#reference-style-links -->
 
+[alertpolicy-aligner]: https://cloud.google.com/monitoring/api/ref_v3/rest/v3/projects.alertPolicies#aligner
+[alertpolicy-reducer]: https://cloud.google.com/monitoring/api/ref_v3/rest/v3/projects.alertPolicies#reducer
 [autoscaler-scaler-methods]: ../scaler/README.md#scaling-methods
 [autoscaler-scaling-profiles]: ../scaler/README.md#scaling-profiles
 [autoscaler-scheduler-tf]: ../../terraform/modules/autoscaler-scheduler/main.tf
+[best-practices]: https://cloud.google.com/memorystore/docs/cluster/general-best-practices
 [cloud-firestore]: https://cloud.google.com/firestore
 [cloud-monitoring]: https://cloud.google.com/monitoring
 [configmap]: https://kubernetes.io/docs/concepts/configuration/configmap
+[custom-rule-set]: ../scaler/README.md#custom-scaling
+[filtering-and-aggregation]: https://cloud.google.com/monitoring/api/v3/aggregation
+[metrics]: https://cloud.google.com/memorystore/docs/cluster/supported-monitoring-metrics
+[time-series-filter]: https://cloud.google.com/monitoring/api/v3/filters#time-series-filter

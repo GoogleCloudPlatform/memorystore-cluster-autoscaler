@@ -149,6 +149,85 @@
           "items": {
             "$ref": "#/$defs/scalingRule"
           }
+        },
+        "metrics": {
+          "type": "array",
+          "description": "An array of custom metric definitions.\nThese can be provided in the configuration objects to customize the metrics used to autoscale your Memorystore instances\n",
+          "items": {
+            "$ref": "#/$defs/metricDefinition"
+          }
+        }
+      }
+    },
+    "metricDefinition": {
+      "title": "Custom Metric Definition",
+      "description": "To specify a custom metric, specify the name of the metric to include, and a filter to query for the data.\nThe updated parameters will be added to the default metrics.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "filter"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 2,
+          "description": "A unique name for the metric to be evaluated."
+        },
+        "filter": {
+          "type": "string",
+          "minLength": 2,
+          "description": "The Cloud Memorystore metric and filter that should be used when querying for data.\nThe Autoscaler will automatically add the filter expressions for instance resources, instance id and project id."
+        },
+        "reducer": {
+          "$comment": "from https://monitoring.googleapis.com/$discovery/rest?version=v3",
+          "enum": [
+            "REDUCE_NONE",
+            "REDUCE_MEAN",
+            "REDUCE_MIN",
+            "REDUCE_MAX",
+            "REDUCE_SUM",
+            "REDUCE_STDDEV",
+            "REDUCE_COUNT",
+            "REDUCE_COUNT_TRUE",
+            "REDUCE_COUNT_FALSE",
+            "REDUCE_FRACTION_TRUE",
+            "REDUCE_PERCENTILE_99",
+            "REDUCE_PERCENTILE_95",
+            "REDUCE_PERCENTILE_50",
+            "REDUCE_PERCENTILE_05"
+          ],
+          "description": "The reducer specifies how the data points should be aggregated when querying for metrics, typically `REDUCE_SUM`.\nFor more details please refer to [Alert Policies - Reducer](https://cloud.google.com/monitoring/api/ref_v3/rest/v3/projects.alertPolicies#reducer) documentation.",
+          "default": "REDUCE_SUM"
+        },
+        "aligner": {
+          "$comment": "Values from https://monitoring.googleapis.com/$discovery/rest?version=v3",
+          "enum": [
+            "ALIGN_NONE",
+            "ALIGN_DELTA",
+            "ALIGN_RATE",
+            "ALIGN_INTERPOLATE",
+            "ALIGN_NEXT_OLDER",
+            "ALIGN_MIN",
+            "ALIGN_MAX",
+            "ALIGN_MEAN",
+            "ALIGN_COUNT",
+            "ALIGN_SUM",
+            "ALIGN_STDDEV",
+            "ALIGN_COUNT_TRUE",
+            "ALIGN_COUNT_FALSE",
+            "ALIGN_FRACTION_TRUE",
+            "ALIGN_PERCENTILE_99",
+            "ALIGN_PERCENTILE_95",
+            "ALIGN_PERCENTILE_50",
+            "ALIGN_PERCENTILE_05",
+            "ALIGN_PERCENT_CHANGE"
+          ],
+          "description": "The aligner specifies how the data points should be aligned in the time series, typically `ALIGN_MAX`.\nFor more details please refer to [Alert Policies - Aligner](https://cloud.google.com/monitoring/api/ref_v3/rest/v3/projects.alertPolicies#aligner) documentation.",
+          "default": "ALIGN_MAX"
+        },
+        "period": {
+          "type": "number",
+          "minimum": 1,
+          "description": "Defines the period of time in units of seconds at which aggregation takes place. Typically the period should be 60.",
+          "default": 60
         }
       }
     },
