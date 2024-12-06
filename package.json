@@ -48,7 +48,7 @@
     "ajv": "^8.17.1",
     "axios": "^1.7.8",
     "eventid": "^2.0.1",
-    "express": "^4.21.1",
+    "express": "^4.21.2",
     "googleapis": "^144.0.0",
     "js-yaml": "^4.1.0",
     "json-rules-engine": "^7.2.1",
