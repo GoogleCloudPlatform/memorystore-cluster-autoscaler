@@ -376,7 +376,8 @@ class StateSpanner extends State {
  *
  * {
  *   "stateDatabase": {
- *       "name": "firestore"
+ *       "name": "firestore",
+ *       "databaseId": "(default)"
  *   }
  * }
  */
@@ -384,24 +385,46 @@ class StateFirestore extends State {
   /**
    * Builds a Firestore client for the given project ID
    * @param {string} stateProjectId
+   * @param {StateDatabaseConfig} stateDatabase
    * @return {firestore.Firestore}
    */
-  static createFirestoreClient(stateProjectId) {
-    return new firestore.Firestore({projectId: stateProjectId});
+  static createFirestoreClient(stateProjectId, stateDatabase) {
+    if (!stateDatabase.databaseId) {
+      return new firestore.Firestore({projectId: stateProjectId, databaseId: "(default)"});
+    }
+    return new firestore.Firestore({projectId: stateProjectId, databaseId: stateDatabase.databaseId});
+  }
+
+  /**
+   * Builds a Firestore database path - used as the key for memoize
+   * @param {string} stateProjectId
+   * @param {StateDatabaseConfig} stateDatabase
+   * @return {string}
+   */
+   static getStateDatabasePath(stateProjectId, stateDatabase) {
+    if (!stateDatabase.databaseId) {
+      return `projects/${stateProjectId}/databases/(default)`;
+    }
+    return `projects/${stateProjectId}/databases/${stateDatabase.databaseId}`;
   }
 
   /**
    * Memoize createFirestoreClient() so that we only create one Firestore
    * client for each stateProject
    */
-  static getFirestoreClient = memoize(StateFirestore.createFirestoreClient);
+  static getFirestoreClient = memoize(
+    StateFirestore.createFirestoreClient, StateFirestore.getStateDatabasePath
+  );
 
   /**
    * @param {AutoscalerMemorystoreCluster} cluster
    */
   constructor(cluster) {
     super(cluster);
-    this.firestore = StateFirestore.getFirestoreClient(this.stateProjectId);
+    this.stateDatabase = cluster.stateDatabase;
+    /** @type {firestore.Firestore} */
+    // @ts-ignore
+    this.firestore = StateFirestore.getFirestoreClient(this.stateProjectId, this.stateDatabase);
   }
 
   /**

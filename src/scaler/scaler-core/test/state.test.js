@@ -127,6 +127,10 @@ describe('stateFirestoreTests', () => {
   /** @type {AutoscalerMemorystoreCluster} */
   const autoscalerConfig = {
     ...BASE_CONFIG,
+    stateDatabase: {
+      name: 'firestore',
+      databaseId: '(default)',
+    },
   };
 
   /** @type {firestore.DocumentSnapshot<any>} */
