@@ -31,6 +31,7 @@
 *   [Scaling methods](#scaling-methods)
 *   [Scaling adjustments](#scaling-adjustments)
 *   [Downstream messaging](#downstream-messaging)
+*   [Troubleshooting](#troubleshooting)
 
 ## Overview
 
@@ -444,6 +445,83 @@ See [this article][pub-sub-receive] for an example.
 
 However, if you want to validate the received message against the Protobuf schema,
 you can follow [this example][pub-sub-receive-proto].
+
+## Troubleshooting
+
+### Poller can't read metrics
+
+For example:
+
+```none
+Unable to retrieve metrics for projects/[PROJECT_ID]/us-central1/[MEMORYSTORE_INSTANCE_ID]:
+Error: 7 PERMISSION_DENIED: Permission monitoring.timeSeries.list denied (or the resource may not exist).
+```
+
+*   Service account is missing permissions
+    *   `poller-sa@{PROJECT_ID}.gserviceaccount.com` for Cloud Run functions, or
+    *   `scaler-sa@{PROJECT_ID}.gserviceaccount.com` for Kubernetes deployment requires
+        *   `redis.clusters.list`,
+        *   `redis.clusters.get`,
+        *   `monitoring.timeSeries.list`
+*   [GKE Workload Identity](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity)
+    is not correctly configured
+*   Incorrectly configured Memorystore cluster ID
+
+### Scaler cannot access state database
+
+For example:
+
+```none
+Failed to read from Spanner State storage:
+projects/[PROJECT_ID]/instances/memorystore-autoscaler-state/databases/memorystore-autoscaler-state/tables/memorystoreClusterAutoscaler:
+Error: 7 PERMISSION_DENIED:
+Caller is missing IAM permission spanner.sessions.create on resource projects/[PROJECT_ID]/instances/[SPANNER_STATE_INSTANCE]/databases/memorystore-autoscaler-state.
+```
+
+*   Scaler service account is missing permissions to Spanner or Firestore.
+    *   `scaler-sa@{PROJECT_ID}.gserviceaccount.com`
+*   Incorrect Spanner or Firestore details in configuration file.
+*   [GKE Workload Identity](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity)
+    is not correctly configured.
+
+### Spanner state store results in an error
+
+For example:
+
+```none
+Error: 5 NOT_FOUND: Database not found: projects/[PROJECT_ID]/instances/[SPANNER_STATE_INSTANCE]/databases/memorystore-autoscaler-state
+```
+
+*   State database is missing from Spanner state instance.
+
+### Scaler cannot scale Memorystore instance(s)
+
+```none
+Unsuccessful scaling attempt: Error: 7 PERMISSION_DENIED:
+Permission 'redis.clusters.update' denied on 'projects/[PROJECT_ID]/locations/us-central1/clusters/[MEMORYSTORE_INSTANCE_ID]'.
+```
+
+*   Scaler service account is missing `redis.clusters.update` permissions to
+    Memorystore.
+    *   `scaler-sa@{PROJECT_ID}.gserviceaccount.com`
+*   Incorrect Memorystore instance specified in configuration file.
+*   [GKE Workload Identity](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity)
+    is not correctly configured
+
+### Latency Spikes when Scaling in
+
+*   The amount of compute capacity removed from the instance might be too large.
+    *   Use the `scaleInLimit` parameter.
+    *   Increase the `scaleInCoolingMinutes.`
+    *   Set a larger `minSize` for the instance.
+
+See the documentation on the [Poller parameters][autoscaler-poller-parameters]
+for further details.
+
+### Autoscaler is too reactive or not reactive enough
+
+*   The "sweet spot" between thresholds is too narrow or too wide.
+    *   Adjust the `thresholds` for the scaling profile.
 
 <!-- LINKS: https://www.markdownguide.org/basic-syntax/#reference-style-links -->
 

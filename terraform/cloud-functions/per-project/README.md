@@ -137,13 +137,12 @@ In this section you prepare your project for deployment.
     project:
 
     ```sh
-    export PROJECT_ID=<INSERT_YOUR_PROJECT_ID>
+    export PROJECT_ID=<YOUR_PROJECT_ID>
     gcloud config set project "${PROJECT_ID}"
     ```
 
-4.  Choose the [region][region-and-zone] and
-    [App Engine Location][app-engine-location] where the Autoscaler
-    infrastructure will be located.
+4.  Choose the [region][region-and-zone] where the Autoscaler infrastructure
+    will be located.
 
     ```sh
     export REGION=us-central1
@@ -153,7 +152,7 @@ In this section you prepare your project for deployment.
 
     ```sh
     gcloud services enable \
-      appengine.googleapis.com \
+      artifactregistry.googleapis.com \
       cloudbuild.googleapis.com \
       cloudfunctions.googleapis.com \
       cloudresourcemanager.googleapis.com \
@@ -181,26 +180,23 @@ In this section you prepare your project for deployment.
 
 ### Using Firestore for Autoscaler state
 
-1.  To use Firestore for the Autoscaler state, enable the additional APIs:
+1.  To use Firestore for the Autoscaler state, enable the additional API:
 
     ```sh
     gcloud services enable firestore.googleapis.com
     ```
 
-2.  Create a Google App Engine app to enable the API for Firestore:
+2.  If you want to choose the name for your Firestore database, set the
+    following variable:
 
     ```sh
-    gcloud app create --region="${REGION}"
+    export TF_VAR_firestore_state_database=<DATABASE_NAME>
     ```
 
-3.  To store the state of the Autoscaler, update the database created with the
-    Google App Engine app to use [Firestore native mode][firestore-native].
+    If you do not set this variable, the default database will be used
+    (`(default)`).
 
-    ```sh
-    gcloud firestore databases update --type=firestore-native
-    ```
-
-4.  Next, continue to [Deploying the Autoscaler](#deploying-the-autoscaler).
+3.  Next, continue to [Deploying the Autoscaler](#deploying-the-autoscaler).
 
 ### Using Spanner for Autoscaler state
 
@@ -222,7 +218,7 @@ In this section you prepare your project for deployment.
     set the the name of your instance:
 
     ```sh
-    export TF_VAR_spanner_state_name=<INSERT_YOUR_STATE_SPANNER_INSTANCE_NAME>
+    export TF_VAR_spanner_state_name=<SPANNER_INSTANCE_NAME>
     ```
 
     If you want to manage the state of the Autoscaler in your own
@@ -292,13 +288,7 @@ In this section you prepare your project for deployment.
     terraform init
     ```
 
-5.  Import the existing App Engine application into Terraform state:
-
-    ```sh
-    terraform import module.autoscaler-scheduler.google_app_engine_application.app "${PROJECT_ID}"
-    ```
-
-6.  Create the Autoscaler infrastructure. Answer `yes` when prompted, after
+5.  Create the Autoscaler infrastructure. Answer `yes` when prompted, after
     reviewing the resources that Terraform intends to create.
 
     ```sh
@@ -377,13 +367,11 @@ page to [configure your Autoscaler](../README.md#configuration).
 
 <!-- LINKS: https://www.markdownguide.org/basic-syntax/#reference-style-links -->
 
-[app-engine-location]: https://cloud.google.com/appengine/docs/locations
 [cloud-console]: https://console.cloud.google.com
 [cloud-firestore]: https://cloud.google.com/firestore
 [cloud-shell]: https://console.cloud.google.com/?cloudshell=true
 [cloud-spanner]: https://cloud.google.com/spanner
 [enable-billing]: https://cloud.google.com/billing/docs/how-to/modify-project
-[firestore-native]: https://cloud.google.com/datastore/docs/firestore-or-datastore#in_native_mode
 [iap]: https://cloud.google.com/security/products/iap
 [project-selector]: https://console.cloud.google.com/projectselector2/home/dashboard
 [provider-issue]: https://github.com/hashicorp/terraform-provider-google/issues/6782

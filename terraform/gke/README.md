@@ -167,7 +167,7 @@ In this section you prepare your project for deployment.
     **autoscaler** project:
 
     ```sh
-    export PROJECT_ID=<INSERT_YOUR_PROJECT_ID>
+    export PROJECT_ID=<YOUR_PROJECT_ID>
     gcloud config set project ${PROJECT_ID}
     ```
 
@@ -206,32 +206,27 @@ In this section you prepare your project for deployment.
 
 ### Using Firestore for Autoscaler state
 
-1.  To use Firestore for the Autoscaler state, enable the additional APIs:
+1.  To use Firestore for the Autoscaler state, enable the additional API:
 
     ```sh
-    gcloud services enable \
-      appengine.googleapis.com \
-      firestore.googleapis.com
+    gcloud services enable firestore.googleapis.com
     ```
 
-2.  Create a Google App Engine app to enable the API for Firestore:
+2.  If you want to choose the name for your Firestore database, set the
+    following variable:
 
     ```sh
-    gcloud app create --region="${REGION}"
+    export TF_VAR_firestore_state_database=<DATABASE_NAME>
     ```
 
-3.  To store the state of the Autoscaler, update the database created with the
-    Google App Engine app to use [Firestore native mode][firestore-native].
-
-    ```sh
-    gcloud firestore databases update --type=firestore-native
-    ```
+    If you do not set this variable, the default database will be used
+    (`(default)`).
 
     You will also need to make a minor modification to the Autoscaler
     configuration. The required steps to do this are later in these
     instructions.
 
-4.  Next, continue to [Creating Autoscaler infrastructure](#creating-autoscaler-infrastructure).
+3.  Next, continue to [Creating Autoscaler infrastructure](#creating-autoscaler-infrastructure).
 
 ### Using Spanner for Autoscaler state
 
@@ -253,7 +248,7 @@ In this section you prepare your project for deployment.
     set the the name of your instance:
 
     ```sh
-    export TF_VAR_spanner_state_name=<INSERT_YOUR_STATE_SPANNER_INSTANCE_NAME>
+    export TF_VAR_spanner_state_name=<SPANNER_INSTANCE_NAME>
     ```
 
     If you want to manage the state of the Autoscaler in your own
@@ -679,7 +674,6 @@ following the instructions above.
 [cloud-monitoring]: https://cloud.google.com/monitoring
 [cloud-shell]: https://console.cloud.google.com/?cloudshell=true
 [enable-billing]: https://cloud.google.com/billing/docs/how-to/modify-project
-[firestore-native]: https://cloud.google.com/datastore/docs/firestore-or-datastore#in_native_mode
 [gcm-docs]: https://cloud.google.com/monitoring/docs
 [gke]: https://cloud.google.com/kubernetes-engine
 [kubernetes-configmap]: https://kubernetes.io/docs/concepts/configuration/configmap/

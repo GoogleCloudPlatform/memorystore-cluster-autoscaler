@@ -32,17 +32,13 @@ locals {
         "databaseId" : "${var.spanner_state_database}",
         } : {
         "name" : "firestore",
+        "databaseId" : "${var.firestore_state_database}"
       }
       },
       var.state_project_id != null ? {
         "stateProjectId" : "${var.state_project_id}"
     } : {})
   ]))
-}
-
-resource "google_app_engine_application" "app" {
-  project     = var.project_id
-  location_id = var.location == "us-central1" ? "us-central" : var.location
 }
 
 resource "google_cloud_scheduler_job" "poller_job" {
@@ -63,8 +59,6 @@ resource "google_cloud_scheduler_job" "poller_job" {
     max_doublings        = 5
     min_backoff_duration = "5s"
   }
-
-  depends_on = [google_app_engine_application.app]
 
   /**
    * Uncomment this stanza if you would prefer to manage the Cloud Scheduler

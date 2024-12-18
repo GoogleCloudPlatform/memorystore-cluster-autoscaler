@@ -171,7 +171,49 @@ describe('stateFirestoreTests', () => {
     delete config.stateProjectId;
     const state = State.buildFor(config);
     assert.equals(state.constructor.name, 'StateFirestore');
-    sinon.assert.calledWith(stubFirestoreConstructor, {projectId: 'myProject'});
+    sinon.assert.calledWith(stubFirestoreConstructor, {
+      projectId: 'myProject',
+      databaseId: '(default)',
+    });
+  });
+
+  it('should create a StateFirestore object with custom config', function () {
+    const databaseConfig = {
+      stateDatabase: {
+        name: 'firestore',
+      },
+    };
+    const config = {
+      ...autoscalerConfig,
+      ...databaseConfig,
+    };
+    delete config.stateProjectId;
+    const state = State.buildFor(config);
+    assert.equals(state.constructor.name, 'StateFirestore');
+    sinon.assert.calledWith(stubFirestoreConstructor, {
+      projectId: 'myProject',
+      databaseId: '(default)',
+    });
+  });
+
+  it('should create a StateFirestore object with a custom db', function () {
+    const databaseConfig = {
+      stateDatabase: {
+        name: 'firestore',
+        databaseId: 'myDatabase',
+      },
+    };
+    const config = {
+      ...autoscalerConfig,
+      ...databaseConfig,
+    };
+    delete config.stateProjectId;
+    const state = State.buildFor(config);
+    assert.equals(state.constructor.name, 'StateFirestore');
+    sinon.assert.calledWith(stubFirestoreConstructor, {
+      projectId: 'myProject',
+      databaseId: 'myDatabase',
+    });
   });
 
   it('should create a StateFirestore object connecting to stateProjectId', function () {
@@ -179,6 +221,7 @@ describe('stateFirestoreTests', () => {
     assert.equals(state.constructor.name, 'StateFirestore');
     sinon.assert.calledWith(stubFirestoreConstructor, {
       projectId: 'stateProject',
+      databaseId: '(default)',
     });
   });
 
@@ -203,9 +246,11 @@ describe('stateFirestoreTests', () => {
     assert.equals(calls.length, 2);
     assert.equals(calls[0].args[0], {
       projectId: 'stateProject1',
+      databaseId: '(default)',
     });
     assert.equals(calls[1].args[0], {
       projectId: 'stateProject2',
+      databaseId: '(default)',
     });
   });
 

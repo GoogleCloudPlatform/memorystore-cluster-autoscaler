@@ -59,6 +59,11 @@ variable "spanner_state_database" {
   default = "memorystore-autoscaler-state"
 }
 
+variable "firestore_state_database" {
+  type    = string
+  default = "memorystore-autoscaler-state"
+}
+
 variable "terraform_test_vm" {
   description = "If set to true, Terraform will create a test VM with Memorystore utils installed."
   type        = bool

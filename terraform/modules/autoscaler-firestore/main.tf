@@ -14,16 +14,18 @@
  * limitations under the License.
  */
 
-/*
- * While the Firestore database is created using the gcloud CLI, the
- * Terraform-created service account used by the Scaler needs read/write
- * permissions to the instance in the appropriate project if Spanner
- * is not being used to hold state.
- */
-
 resource "google_project_iam_member" "scaler_sa_firestore" {
-
   project = var.project_id
   role    = "roles/datastore.user"
   member  = "serviceAccount:${var.scaler_sa_email}"
+}
+
+resource "google_firestore_database" "database" {
+  project                     = var.project_id
+  name                        = var.firestore_state_database
+  location_id                 = var.region
+  type                        = "FIRESTORE_NATIVE"
+  app_engine_integration_mode = "DISABLED"
+  delete_protection_state     = "DELETE_PROTECTION_DISABLED"
+  deletion_policy             = "DELETE"
 }

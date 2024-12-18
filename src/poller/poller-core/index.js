@@ -69,6 +69,12 @@ const shardDefaults = {
   stepSize: 1,
 };
 
+const metricDefaults = {
+  period: 60,
+  aligner: 'ALIGN_MAX',
+  reducer: 'REDUCE_MEAN',
+};
+
 /**
  * Get metadata for Memorystore cluster
  *
@@ -251,6 +257,39 @@ function buildMetrics(projectId, regionId, clusterId) {
 }
 
 /**
+ * Checks to make sure required fields are present and populated
+ *
+ * @param {MemorystoreClusterMetric} metric
+ * @param {string} projectId
+ * @param {string} regionId
+ * @param {string} instanceId
+ * @return {boolean}
+ */
+function validateCustomMetric(metric, projectId, regionId, instanceId) {
+  if (!metric.name) {
+    logger.info({
+      message: 'Missing name parameter for custom metric.',
+      projectId: projectId,
+      regionId: regionId,
+      instanceId: instanceId,
+    });
+    return false;
+  }
+
+  if (!metric.filter) {
+    logger.info({
+      message: 'Missing filter parameter for custom metric.',
+      projectId: projectId,
+      regionId: regionId,
+      instanceId: instanceId,
+    });
+    return false;
+  }
+
+  return true;
+}
+
+/**
  * Get max value of metric over a window
  *
  * @param {string} projectId
@@ -367,67 +406,113 @@ async function parseAndEnrichPayload(payload) {
   const clusters = await configValidator.parseAndAssertValidConfig(payload);
   const clustersFound = [];
 
-  for (let idx = 0; idx < clusters.length; idx++) {
-    // Merge in the defaults
-    clusters[idx] = {...baseDefaults, ...clusters[idx]};
+  for (let clusterIdx = 0; clusterIdx < clusters.length; clusterIdx++) {
+    // Reference before the modifications are made to the metrics structure
+    const customMetrics =
+      /** @type {MemorystoreClusterMetric[]} */
+      (clusters[clusterIdx].metrics);
 
-    if (clusters[idx].minSize < CLUSTER_SIZE_MIN) {
+    // Merge in the defaults
+    clusters[clusterIdx] = {...baseDefaults, ...clusters[clusterIdx]};
+
+    if (clusters[clusterIdx].minSize < CLUSTER_SIZE_MIN) {
       throw new Error(
-        `INVALID CONFIG: minSize (${clusters[idx].minSize}) is below the ` +
+        `INVALID CONFIG: minSize (${clusters[clusterIdx].minSize}) is below the ` +
           `minimum cluster size of ${CLUSTER_SIZE_MIN}.`,
       );
     }
 
-    if (clusters[idx].minSize > clusters[idx].maxSize) {
+    if (clusters[clusterIdx].minSize > clusters[clusterIdx].maxSize) {
       throw new Error(
-        `INVALID CONFIG: minSize (${clusters[idx].minSize}) is larger than ` +
-          `maxSize (${clusters[idx].maxSize}).`,
+        `INVALID CONFIG: minSize (${clusters[clusterIdx].minSize}) is larger than ` +
+          `maxSize (${clusters[clusterIdx].maxSize}).`,
       );
     }
 
-    if (clusters[idx].units === undefined) {
-      clusters[idx].units = AutoscalerUnits.SHARDS;
+    if (clusters[clusterIdx].units === undefined) {
+      clusters[clusterIdx].units = AutoscalerUnits.SHARDS;
       logger.debug({
-        message: `  Defaulted units to ${clusters[idx].units}`,
-        projectId: clusters[idx].projectId,
-        regionId: clusters[idx].regionId,
-        clusterId: clusters[idx].clusterId,
+        message: `  Defaulted units to ${clusters[clusterIdx].units}`,
+        projectId: clusters[clusterIdx].projectId,
+        regionId: clusters[clusterIdx].regionId,
+        clusterId: clusters[clusterIdx].clusterId,
       });
     }
 
-    if (clusters[idx].units.toUpperCase() == AutoscalerUnits.SHARDS) {
-      clusters[idx].units = clusters[idx].units.toUpperCase();
-      clusters[idx] = {...shardDefaults, ...clusters[idx]};
+    if (clusters[clusterIdx].units.toUpperCase() == AutoscalerUnits.SHARDS) {
+      clusters[clusterIdx].units = clusters[clusterIdx].units.toUpperCase();
+      clusters[clusterIdx] = {...shardDefaults, ...clusters[clusterIdx]};
     } else {
       throw new Error(
-        `INVALID CONFIG: ${clusters[idx].units} is invalid. Valid: ${AutoscalerUnits.SHARDS}`,
+        `INVALID CONFIG: ${clusters[clusterIdx].units} is invalid. Valid: ${AutoscalerUnits.SHARDS}`,
       );
     }
 
     // Assemble the metrics
-    clusters[idx].metrics = buildMetrics(
-      clusters[idx].projectId,
-      clusters[idx].regionId,
-      clusters[idx].clusterId,
+    clusters[clusterIdx].metrics = buildMetrics(
+      clusters[clusterIdx].projectId,
+      clusters[clusterIdx].regionId,
+      clusters[clusterIdx].clusterId,
     );
 
+    if (customMetrics != null) {
+      for (let customIdx = 0; customIdx < customMetrics.length; customIdx++) {
+        const metricIdx = clusters[clusterIdx].metrics.findIndex(
+          (x) => x.name === customMetrics[customIdx].name,
+        );
+        if (metricIdx != -1) {
+          throw new Error(
+            `INVALID CONFIG: custom metric ${customMetrics[customIdx].name} shadows default metric name`,
+          );
+        } else {
+          /** @type {MemorystoreClusterMetric} */
+          const metric = {...metricDefaults, ...customMetrics[customIdx]};
+          const cluster = clusters[clusterIdx];
+          if (
+            validateCustomMetric(
+              metric,
+              cluster.projectId,
+              cluster.regionId,
+              cluster.clusterId,
+            )
+          ) {
+            metric.filter =
+              createBaseFilter(
+                cluster.projectId,
+                cluster.regionId,
+                cluster.clusterId,
+              ) + metric.filter;
+            cluster.metrics.push(metric);
+            logger.debug({
+              message:
+                ` Added custom metric ${metric.name}` +
+                ` with filter ${metric.filter}`,
+              projectId: cluster.projectId,
+              regionId: cluster.regionId,
+              clusterId: cluster.clusterId,
+            });
+          }
+        }
+      }
+    }
+
     try {
-      clusters[idx] = {
-        ...clusters[idx],
+      clusters[clusterIdx] = {
+        ...clusters[clusterIdx],
         ...(await getMemorystoreClusterMetadata(
-          clusters[idx].projectId,
-          clusters[idx].regionId,
-          clusters[idx].clusterId,
-          clusters[idx].units.toUpperCase(),
+          clusters[clusterIdx].projectId,
+          clusters[clusterIdx].regionId,
+          clusters[clusterIdx].clusterId,
+          clusters[clusterIdx].units.toUpperCase(),
         )),
       };
-      clustersFound.push(clusters[idx]);
+      clustersFound.push(clusters[clusterIdx]);
     } catch (err) {
       logger.error({
-        message: `Unable to retrieve metadata for ${clusters[idx].projectId}/${clusters[idx].regionId}/${clusters[idx].clusterId}: ${err}`,
-        projectId: clusters[idx].projectId,
-        regionId: clusters[idx].regionId,
-        clusterId: clusters[idx].clusterId,
+        message: `Unable to retrieve metadata for ${clusters[clusterIdx].projectId}/${clusters[clusterIdx].regionId}/${clusters[clusterIdx].clusterId}: ${err}`,
+        projectId: clusters[clusterIdx].projectId,
+        regionId: clusters[clusterIdx].regionId,
+        clusterId: clusters[clusterIdx].clusterId,
         err: err,
       });
     }

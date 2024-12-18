@@ -58,9 +58,13 @@ module "autoscaler-functions" {
 }
 
 module "autoscaler-firestore" {
+  count  = !var.terraform_spanner_state ? 1 : 0
   source = "../../modules/autoscaler-firestore"
 
-  project_id      = local.app_project_id
+  project_id               = local.app_project_id
+  region                   = var.region
+  firestore_state_database = var.firestore_state_database
+
   poller_sa_email = google_service_account.poller_sa.email
   scaler_sa_email = google_service_account.scaler_sa.email
 }
@@ -87,9 +91,10 @@ module "autoscaler-scheduler" {
   pubsub_topic             = module.autoscaler-functions.poller_topic
   target_pubsub_topic      = module.autoscaler-functions.scaler_topic
 
-  terraform_spanner_state = var.terraform_spanner_state
-  spanner_state_name      = var.spanner_state_name
-  spanner_state_database  = var.spanner_state_database
+  terraform_spanner_state  = var.terraform_spanner_state
+  spanner_state_name       = var.spanner_state_name
+  spanner_state_database   = var.spanner_state_database
+  firestore_state_database = var.firestore_state_database
 
   // Example of passing config as json
   // json_config             = base64encode(jsonencode([{

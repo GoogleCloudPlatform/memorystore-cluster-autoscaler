@@ -97,9 +97,10 @@ module "autoscaler-scheduler" {
   pubsub_topic             = module.autoscaler-forwarder.forwarder_topic
   target_pubsub_topic      = data.terraform_remote_state.autoscaler.outputs.scaler_topic
 
-  terraform_spanner_state = var.terraform_spanner_state
-  spanner_state_name      = var.spanner_state_name
-  spanner_state_database  = var.spanner_state_database
+  terraform_spanner_state  = var.terraform_spanner_state
+  spanner_state_name       = var.spanner_state_name
+  spanner_state_database   = var.spanner_state_database
+  firestore_state_database = var.firestore_state_database
 
   // Example of passing config as json
   // json_config             = base64encode(jsonencode([{

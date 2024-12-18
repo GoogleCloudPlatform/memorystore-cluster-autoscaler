@@ -18,10 +18,18 @@ variable "project_id" {
   type = string
 }
 
+variable "region" {
+  type = string
+}
+
 variable "poller_sa_email" {
   type = string
 }
 
 variable "scaler_sa_email" {
+  type = string
+}
+
+variable "firestore_state_database" {
   type = string
 }

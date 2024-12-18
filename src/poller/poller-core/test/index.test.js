@@ -28,6 +28,7 @@ const app = rewire('../index.js');
 
 const buildMetrics = app.__get__('buildMetrics');
 const parseAndEnrichPayload = app.__get__('parseAndEnrichPayload');
+const validateCustomMetric = app.__get__('validateCustomMetric');
 
 describe('#buildMetrics', () => {
   it('should return 6 metrics', () => {
@@ -60,6 +61,41 @@ describe('#buildMetrics', () => {
       'fakeRegionId',
       'fakeClusterId',
     )[0].filter.should.have.match(/fakeClusterId/);
+  });
+});
+
+describe('#validateCustomMetric', () => {
+  it('should return false if name is missing', () => {
+    validateCustomMetric({
+      filter: 'my filter',
+    }).should.be.false();
+  });
+
+  it('should return false if filter is missing', () => {
+    validateCustomMetric({
+      name: 'custom_filter',
+    }).should.be.false();
+  });
+
+  it('should return false if name is blank', () => {
+    validateCustomMetric({
+      name: '',
+      filter: 'my filter',
+    }).should.be.false();
+  });
+
+  it('should return false if filter is blank', () => {
+    validateCustomMetric({
+      name: 'custom_filter',
+      filter: '',
+    }).should.be.false();
+  });
+
+  it('should return true if all required fields are present and valid', () => {
+    validateCustomMetric({
+      name: 'custom_filter',
+      filter: 'my filter',
+    }).should.be.true();
   });
 });
 
@@ -226,6 +262,30 @@ describe('#parseAndEnrichPayload', () => {
 
     await parseAndEnrichPayload(payload).should.be.rejectedWith(Error, {
       message: 'INVALID CONFIG: minSize (10) is larger than maxSize (5).',
+    });
+  });
+
+  it('should throw if a duplicate metric is defined', async () => {
+    const payload = JSON.stringify([
+      {
+        projectId: 'project1',
+        regionId: 'region1',
+        clusterId: 'spanner1',
+        scalerPubSubTopic: 'projects/myproject/topics/scaler-topic',
+        units: 'SHARDS',
+        metrics: [
+          {
+            name: 'cpu_maximum_utilization',
+            filter: 'redis.googleapis.com/cluster/cpu/maximum_utilization',
+          },
+        ],
+      },
+    ]);
+
+    await parseAndEnrichPayload(payload).should.be.rejectedWith(Error, {
+      message:
+        'INVALID CONFIG: custom metric cpu_maximum_utilization' +
+        ' shadows default metric name',
     });
   });
 });

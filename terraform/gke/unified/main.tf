@@ -61,9 +61,13 @@ module "autoscaler-gke" {
 }
 
 module "autoscaler-firestore" {
+  count  = !var.terraform_spanner_state ? 1 : 0
   source = "../../modules/autoscaler-firestore"
 
-  project_id      = var.project_id
+  project_id               = var.project_id
+  region                   = var.region
+  firestore_state_database = var.firestore_state_database
+
   poller_sa_email = google_service_account.autoscaler_sa.email
   scaler_sa_email = google_service_account.autoscaler_sa.email
 }

@@ -92,6 +92,10 @@ variable "spanner_state_database" {
   default  = null
 }
 
+variable "firestore_state_database" {
+  type = string
+}
+
 variable "state_project_id" {
   type     = string
   nullable = true

@@ -168,14 +168,6 @@ func TestPerProjectEndToEndDeployment(t *testing.T) {
 		logger.Log(t, "TEST STAGE: TEARDOWN COMPLETED")
 	})
 
-	test_structure.RunTestStage(t, "import", func() {
-		terraformOptions := test_structure.LoadTerraformOptions(t, terraformDir)
-		terraformArgs := []string{"module.autoscaler-scheduler.google_app_engine_application.app", config.ProjectId}
-		terraformArgsFormatted := append(terraform.FormatArgs(terraformOptions, "-input=false"), terraformArgs...)
-		terraformCommand := append([]string{"import"}, terraformArgsFormatted...)
-		terraform.RunTerraformCommand(t, terraformOptions, terraformCommand...)
-	})
-
 	test_structure.RunTestStage(t, "apply", func() {
 		logger.Log(t, "TEST STAGE: TERRAFORM APPLY")
 		logger.Log(t, "----------------------------------------------------------")

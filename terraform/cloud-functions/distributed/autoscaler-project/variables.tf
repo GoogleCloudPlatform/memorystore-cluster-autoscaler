@@ -44,6 +44,11 @@ variable "spanner_state_database" {
   default = "memorystore-autoscaler-state"
 }
 
+variable "firestore_state_database" {
+  type    = string
+  default = "memorystore-autoscaler-state"
+}
+
 variable "terraform_dashboard" {
   description = "If set to true, Terraform will create a Cloud Monitoring dashboard including important Spanner metrics."
   type        = bool
