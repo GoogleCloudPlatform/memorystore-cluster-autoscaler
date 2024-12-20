@@ -1,6 +1,6 @@
 {
   "name": "memorystore-cluster-autoscaler",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "Description": "Autoscaling for Memorystore Cluster",
   "homepage": "https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler",
   "license": "Apache-2.0",

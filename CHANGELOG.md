@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.0.1](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/compare/v2.0.0...v2.0.1) (2024-12-20)
+
+
+### Bug Fixes
+
+* **deps:** update module golang.org/x/net to v0.33.0 [security] ([#56](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/issues/56)) ([a4d41fa](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/commit/a4d41fa7d222bf769de4a40f7f658cd5dd070e6b))
+* **deps:** update terraform ([#55](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/issues/55)) ([e8f8f6d](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/commit/e8f8f6dafdd070a76b4ec457bb19ad606f7d346e))
+
 ## [2.0.0](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/compare/v1.0.0...v2.0.0) (2024-12-20)
 
 
