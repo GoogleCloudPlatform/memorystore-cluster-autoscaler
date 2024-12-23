@@ -16,7 +16,7 @@
 
 terraform {
   provider_meta "google" {
-    module_name = "cloud-solutions/memorystore-cluster-autoscaler-deploy-cf-v2.0.0" // x-release-please-version
+    module_name = "cloud-solutions/memorystore-cluster-autoscaler-deploy-cf-v2.0.1" // x-release-please-version
   }
 }
 
