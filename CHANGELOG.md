@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.0.2](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/compare/v2.0.1...v2.0.2) (2025-01-14)
+
+
+### Bug Fixes
+
+* configure terminal as noninteractive ([#64](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/issues/64)) ([5a7b029](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/commit/5a7b0295e97a53231a9387d0adfd9c1bc10258fb))
+* **deps:** update npm-packages ([#59](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/issues/59)) ([654c8ce](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/commit/654c8ce9e03f27db7b9dc4fe47ee2e72e34e73c2))
+
 ## [2.0.1](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/compare/v2.0.0...v2.0.1) (2024-12-23)
 
 
