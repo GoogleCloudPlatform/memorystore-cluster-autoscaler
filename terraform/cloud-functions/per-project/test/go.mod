@@ -1,6 +1,6 @@
 module github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler
 
-go 1.23
+go 1.23.5
 
 require (
 	cloud.google.com/go/redis v1.17.2
