@@ -219,8 +219,7 @@ In this section you prepare your project for deployment.
     export TF_VAR_firestore_state_database=<DATABASE_NAME>
     ```
 
-    If you do not set this variable, the default database will be used
-    (`(default)`).
+    If you do not set this variable, Terraform will create and use a dedicated Firestore database named `memorystore-autoscaler-state` for storing Autoscaler state.
 
     You will also need to make a minor modification to the Autoscaler
     configuration. The required steps to do this are later in these
