@@ -65,7 +65,10 @@ const dummySpannerModule = {
 
 // import module to define State type for typechecking...
 let State = require('../state');
-const {AutoscalerUnits} = require('../../../autoscaler-common/types');
+const {
+  AutoscalerUnits,
+  AutoscalerEngine,
+} = require('../../../autoscaler-common/types');
 // override module with rewired module
 // @ts-ignore
 State = rewire('../state.js');
@@ -108,6 +111,31 @@ const BASE_CONFIG = {
   stepSize: 1,
 };
 
+describe('#state.getClusterId', () => {
+  it('should return the correct cluster ID for Redis', () => {
+    const config = {...BASE_CONFIG, engine: AutoscalerEngine.REDIS};
+    const state = State.buildFor(config);
+    const expectedId = `projects/${config.projectId}/locations/${config.regionId}/clusters/${config.clusterId}`;
+    assert.equals(state.getClusterId(), expectedId);
+  });
+
+  it('should return the correct cluster ID for Valkey', () => {
+    const config = {...BASE_CONFIG, engine: AutoscalerEngine.VALKEY};
+    const state = State.buildFor(config);
+    const expectedId = `projects/${config.projectId}/locations/${config.regionId}/instances/${config.clusterId}`;
+    assert.equals(state.getClusterId(), expectedId);
+  });
+
+  it('should throw an error for an unknown engine', () => {
+    const config = {...BASE_CONFIG, engine: 'UNKNOWN_ENGINE'};
+    const state = State.buildFor(config);
+    assert.exception(
+      () => state.getClusterId(),
+      /Unknown engine constructing ID for state store: UNKNOWN_ENGINE/,
+    );
+  });
+});
+
 describe('stateFirestoreTests', () => {
   /** @type {sinon.SinonStubbedInstance<firestore.Firestore>} */
   let stubFirestoreInstance;
@@ -121,7 +149,7 @@ describe('stateFirestoreTests', () => {
 
   const DOC_PATH =
     `memorystoreClusterAutoscaler/state/projects/${BASE_CONFIG.projectId}` +
-    `/regions/${BASE_CONFIG.regionId}/clusters/${BASE_CONFIG.clusterId}`;
+    `/locations/${BASE_CONFIG.regionId}/clusters/${BASE_CONFIG.clusterId}`;
 
   /** @type {AutoscalerMemorystoreCluster} */
   const autoscalerConfig = {
@@ -370,7 +398,7 @@ describe('stateSpannerTests', () => {
     },
   };
 
-  const expectedRowId = `projects/${BASE_CONFIG.projectId}/regions/${BASE_CONFIG.regionId}/clusters/${BASE_CONFIG.clusterId}`;
+  const expectedRowId = `projects/${BASE_CONFIG.projectId}/locations/${BASE_CONFIG.regionId}/clusters/${BASE_CONFIG.clusterId}`;
   const expectedQuery = {
     columns: [
       'lastScalingTimestamp',
