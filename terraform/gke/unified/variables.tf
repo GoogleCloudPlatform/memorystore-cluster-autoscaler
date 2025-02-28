@@ -87,3 +87,9 @@ variable "ip_range" {
   type        = string
   default     = "10.0.0.0/24"
 }
+
+variable "memorystore_engine" {
+  description = "The underlying engine to use"
+  type        = string
+  default     = "REDIS"
+}

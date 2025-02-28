@@ -28,7 +28,7 @@
                       "alignmentPeriod": "120s",
                       "perSeriesAligner": "ALIGN_MEAN"
                     },
-                    "filter": "metric.type=\"redis.googleapis.com/cluster/cpu/average_utilization\" resource.type=\"redis.googleapis.com/Cluster\" resource.label.\"cluster_id\"=\"${memorystore_cluster_name}\" resource.label.\"location\"=\"${region}\" metric.labels.\"role\"=\"primary\""
+                    "filter": "metric.type=\"${metrics_prefix}/cpu/average_utilization\" resource.type=\"${metrics_type}\" resource.label.\"${metrics_id_label}\"=\"${memorystore_cluster_name}\" resource.label.\"location\"=\"${region}\" metric.labels.\"role\"=\"primary\""
                   }
                 }
               },
@@ -46,7 +46,7 @@
                       "alignmentPeriod": "120s",
                       "perSeriesAligner": "ALIGN_MEAN"
                     },
-                    "filter": "metric.type=\"redis.googleapis.com/cluster/cpu/maximum_utilization\" resource.type=\"redis.googleapis.com/Cluster\" resource.label.\"cluster_id\"=\"${memorystore_cluster_name}\" resource.label.\"location\"=\"${region}\" metric.labels.\"role\"=\"primary\""
+                    "filter": "metric.type=\"${metrics_prefix}/cpu/maximum_utilization\" resource.type=\"${metrics_type}\" resource.label.\"${metrics_id_label}\"=\"${memorystore_cluster_name}\" resource.label.\"location\"=\"${region}\" metric.labels.\"role\"=\"primary\""
                   }
                 }
               }
@@ -104,7 +104,7 @@
                       "alignmentPeriod": "120s",
                       "perSeriesAligner": "ALIGN_MEAN"
                     },
-                    "filter": "metric.type=\"redis.googleapis.com/cluster/memory/average_utilization\" resource.type=\"redis.googleapis.com/Cluster\" resource.label.\"cluster_id\"=\"${memorystore_cluster_name}\" resource.label.\"location\"=\"${region}\""
+                    "filter": "metric.type=\"${metrics_prefix}/memory/average_utilization\" resource.type=\"${metrics_type}\" resource.label.\"${metrics_id_label}\"=\"${memorystore_cluster_name}\" resource.label.\"location\"=\"${region}\""
                   }
                 }
               },
@@ -122,7 +122,7 @@
                       "alignmentPeriod": "120s",
                       "perSeriesAligner": "ALIGN_MEAN"
                     },
-                    "filter": "metric.type=\"redis.googleapis.com/cluster/memory/maximum_utilization\" resource.type=\"redis.googleapis.com/Cluster\" resource.label.\"cluster_id\"=\"${memorystore_cluster_name}\" resource.label.\"location\"=\"${region}\""
+                    "filter": "metric.type=\"${metrics_prefix}/memory/maximum_utilization\" resource.type=\"${metrics_type}\" resource.label.\"${metrics_id_label}\"=\"${memorystore_cluster_name}\" resource.label.\"location\"=\"${region}\""
                   }
                 }
               }
@@ -182,7 +182,7 @@
                       "groupByFields": [],
                       "perSeriesAligner": "ALIGN_MEAN"
                     },
-                    "filter": "metric.type=\"redis.googleapis.com/cluster/stats/average_evicted_keys\" resource.type=\"redis.googleapis.com/Cluster\" resource.label.\"cluster_id\"=\"${memorystore_cluster_name}\" resource.label.\"location\"=\"${region}\""
+                    "filter": "metric.type=\"${metrics_prefix}/stats/average_evicted_keys\" resource.type=\"${metrics_type}\" resource.label.\"${metrics_id_label}\"=\"${memorystore_cluster_name}\" resource.label.\"location\"=\"${region}\""
                   }
                 }
               },
@@ -201,7 +201,7 @@
                       "groupByFields": [],
                       "perSeriesAligner": "ALIGN_MEAN"
                     },
-                    "filter": "metric.type=\"redis.googleapis.com/cluster/stats/maximum_evicted_keys\" resource.type=\"redis.googleapis.com/Cluster\" resource.label.\"cluster_id\"=\"${memorystore_cluster_name}\" resource.label.\"location\"=\"${region}\""
+                    "filter": "metric.type=\"${metrics_prefix}/stats/maximum_evicted_keys\" resource.type=\"${metrics_type}\" resource.label.\"${metrics_id_label}\"=\"${memorystore_cluster_name}\" resource.label.\"location\"=\"${region}\""
                   }
                 }
               }
@@ -240,7 +240,7 @@
                       "groupByFields": [],
                       "perSeriesAligner": "ALIGN_MEAN"
                     },
-                    "filter": "metric.type=\"redis.googleapis.com/cluster/memory/size\" resource.type=\"redis.googleapis.com/Cluster\" resource.label.\"cluster_id\"=\"${memorystore_cluster_name}\" resource.label.\"location\"=\"${region}\""
+                    "filter": "metric.type=\"${metrics_prefix}/memory/size\" resource.type=\"${metrics_type}\" resource.label.\"${metrics_id_label}\"=\"${memorystore_cluster_name}\" resource.label.\"location\"=\"${region}\""
                   }
                 }
               },
@@ -259,7 +259,7 @@
                       "groupByFields": [],
                       "perSeriesAligner": "ALIGN_MEAN"
                     },
-                    "filter": "metric.type=\"redis.googleapis.com/cluster/memory/total_used_memory\" resource.type=\"redis.googleapis.com/Cluster\" resource.label.\"cluster_id\"=\"${memorystore_cluster_name}\" resource.label.\"location\"=\"${region}\""
+                    "filter": "metric.type=\"${metrics_prefix}/memory/total_used_memory\" resource.type=\"${metrics_type}\" resource.label.\"${metrics_id_label}\"=\"${memorystore_cluster_name}\" resource.label.\"location\"=\"${region}\""
                   }
                 }
               }

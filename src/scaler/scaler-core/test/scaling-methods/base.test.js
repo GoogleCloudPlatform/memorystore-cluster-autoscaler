@@ -366,7 +366,7 @@ describe('#ensureMinFreeMemory', () => {
       },
     ];
     const cluster = createClusterParameters({
-      shardCount: 10,
+      currentSize: 10,
       minFreeMemoryPercent: 20,
     });
     cluster.metrics = metricsOverlay(cluster, metrics);
@@ -382,7 +382,7 @@ describe('#ensureMinFreeMemory', () => {
       },
     ];
     const cluster = createClusterParameters({
-      shardCount: 10,
+      currentSize: 10,
       minFreeMemoryPercent: 20,
     });
     cluster.metrics = metricsOverlay(cluster, metrics);
@@ -398,7 +398,7 @@ describe('#ensureMinFreeMemory', () => {
       },
     ];
     const cluster = createClusterParameters({
-      shardCount: 10,
+      currentSize: 10,
       minFreeMemoryPercent: 30,
     });
     cluster.metrics = metricsOverlay(cluster, metrics);

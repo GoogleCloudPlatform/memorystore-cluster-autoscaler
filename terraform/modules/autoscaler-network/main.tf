@@ -20,6 +20,10 @@ terraform {
   }
 }
 
+locals {
+  psc_service_class = var.memorystore_engine == "REDIS" ? "gcp-memorystore-redis" : "gcp-memorystore"
+}
+
 resource "google_compute_network" "autoscaler_network" {
   name                    = "memorystore-cluster-autoscaler-network"
   auto_create_subnetworks = false
@@ -54,7 +58,7 @@ resource "google_compute_router_nat" "nat" {
 resource "google_network_connectivity_service_connection_policy" "policy" {
   name          = "memorystore-cluster-autoscaler-policy"
   location      = var.region
-  service_class = "gcp-memorystore-redis"
+  service_class = local.psc_service_class
   description   = "Basic service connection policy"
   network       = google_compute_network.autoscaler_network.id
   project       = var.project_id

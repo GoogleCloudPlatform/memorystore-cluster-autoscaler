@@ -161,6 +161,7 @@ In this section you prepare your project for deployment.
       eventarc.googleapis.com \
       iam.googleapis.com \
       networkconnectivity.googleapis.com \
+      memorystore.googleapis.com \
       pubsub.googleapis.com \
       logging.googleapis.com \
       monitoring.googleapis.com \

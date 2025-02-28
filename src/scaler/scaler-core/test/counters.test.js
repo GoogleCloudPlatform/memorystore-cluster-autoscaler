@@ -40,8 +40,7 @@ describe('#scaler-counters', () => {
     minFreeMemoryPercent: 30,
     stepSize: 2,
     units: 'SHARDS',
-    shardCount: 5,
-    sizeGb: 20,
+    engine: 'REDIS',
   };
 
   beforeEach(() => {

@@ -14,19 +14,54 @@
  * limitations under the License.
  */
 
-resource "google_pubsub_topic" "downstream_topic" {
-  name = "downstream-topic"
 
-  depends_on = [google_pubsub_schema.scaler_downstream_pubsub_schema]
+resource "random_id" "role_suffix" {
+  byte_length = 4
+}
 
-  schema_settings {
-    schema   = google_pubsub_schema.scaler_downstream_pubsub_schema.id
-    encoding = "JSON"
-  }
+# Limited role for Poller
+resource "google_project_iam_custom_role" "metrics_viewer_iam_role" {
+  project     = var.project_id
+  role_id     = "memorystoreClusterAutoscalerMetricsViewer_${random_id.role_suffix.hex}"
+  title       = "Memorystore Cluster Autoscaler Metrics Viewer Role"
+  description = "Allows a principal to get Memorystore Cluster instances and view time series metrics"
+  permissions = [
+    "memorystore.instances.get",
+    "memorystore.instances.list",
+    "monitoring.timeSeries.list",
+    "redis.clusters.get",
+    "redis.clusters.list"
+  ]
+}
 
-  lifecycle {
-    replace_triggered_by = [google_pubsub_schema.scaler_downstream_pubsub_schema]
-  }
+# Assign custom role to Poller
+resource "google_project_iam_member" "poller_metrics_viewer_iam" {
+  role    = google_project_iam_custom_role.metrics_viewer_iam_role.name
+  project = var.project_id
+  member  = "serviceAccount:${var.poller_sa_email}"
+}
+
+# Limited role for Scaler
+resource "google_project_iam_custom_role" "capacity_manager_iam_role" {
+  project     = var.project_id
+  role_id     = "memorystoreClusterAutoscalerCapacityManager_${random_id.role_suffix.hex}"
+  title       = "Memorystore Cluster Autoscaler Capacity Manager Role"
+  description = "Allows a principal to scale Memorystore Cluster instances"
+  permissions = [
+    "memorystore.instances.get",
+    "memorystore.instances.update",
+    "memorystore.operations.get",
+    "redis.clusters.get",
+    "redis.clusters.update",
+    "redis.operations.get"
+  ]
+}
+
+# Assign custom role to Scaler
+resource "google_project_iam_member" "scaler_update_capacity_iam" {
+  role    = google_project_iam_custom_role.capacity_manager_iam_role.name
+  project = var.project_id
+  member  = "serviceAccount:${var.scaler_sa_email}"
 }
 
 resource "google_pubsub_topic_iam_member" "scaler_downstream_pub_iam" {
@@ -73,4 +108,19 @@ resource "google_project_iam_member" "build_iam" {
 resource "time_sleep" "wait_for_iam" {
   depends_on      = [google_project_iam_member.build_iam]
   create_duration = "90s"
+}
+
+resource "google_pubsub_topic" "downstream_topic" {
+  name = "downstream-topic"
+
+  depends_on = [google_pubsub_schema.scaler_downstream_pubsub_schema]
+
+  schema_settings {
+    schema   = google_pubsub_schema.scaler_downstream_pubsub_schema.id
+    encoding = "JSON"
+  }
+
+  lifecycle {
+    replace_triggered_by = [google_pubsub_schema.scaler_downstream_pubsub_schema]
+  }
 }

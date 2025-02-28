@@ -27,38 +27,36 @@ const {convertMillisecToHumanReadable} = require('./utils.js');
 const {logger} = require('../../autoscaler-common/logger');
 const Counters = require('./counters.js');
 const {publishProtoMsgDownstream} = require('./utils.js');
-const {CloudRedisClusterClient} = require('@google-cloud/redis-cluster');
+const {
+  CloudRedisClusterClient,
+  protos: RedisClusterProtos,
+} = require('@google-cloud/redis-cluster');
+const {
+  MemorystoreClient,
+  protos: MemorystoreProtos,
+} = require('@google-cloud/memorystore');
 const sanitize = require('sanitize-filename');
 const State = require('./state.js');
 const fs = require('fs');
 const {version: packageVersion} = require('../../../package.json');
-const {google: GoogleApis} = require('googleapis');
+const {AutoscalerEngine} = require('../../autoscaler-common/types');
 
 /**
  * @typedef {import('../../autoscaler-common/types').AutoscalerMemorystoreCluster
  * } AutoscalerMemorystoreCluster
  * @typedef {import('../../autoscaler-common/types.js').RuleSet} RuleSet
  * @typedef {import('./state.js').StateData} StateData
+ * @typedef {import('@google-cloud/memorystore').protos.google.longrunning.GetOperationRequest} GetOperationRequest{}
+ * @typedef {import('@google-cloud/memorystore').protos.google.longrunning.Operation} Operation{}
  */
 
-const memorystoreClusterClient = new CloudRedisClusterClient({
+const userAgentMetadata = {
   libName: 'cloud-solutions',
   libVersion: `memorystore-cluster-autoscaler-scaler-usage-v${packageVersion}`,
-});
+};
 
-// Set up REST API for LRO checking.
-const redisApi = GoogleApis.redis({
-  version: 'v1',
-  auth: new GoogleApis.auth.GoogleAuth({
-    scopes: ['https://www.googleapis.com/auth/cloud-platform'],
-  }),
-  userAgentDirectives: [
-    {
-      product: 'cloud-solutions',
-      version: `memorystore-cluster-autoscaler-scaler-usage-v${packageVersion}`,
-    },
-  ],
-});
+const memorystoreRedisClient = new CloudRedisClusterClient(userAgentMetadata);
+const memorystoreValkeyClient = new MemorystoreClient(userAgentMetadata);
 
 /**
  * Get ruleSet by profile name.
@@ -304,24 +302,38 @@ async function scaleMemorystoreCluster(cluster, suggestedSize) {
     payload: cluster,
   });
 
-  const request = {
+  const updateMask = {
+    paths: ['shard_count'],
+  };
+
+  const requestRedis = {
     cluster: {
       name: `projects/${cluster.projectId}/locations/${cluster.regionId}/clusters/${cluster.clusterId}`,
       shardCount: suggestedSize,
     },
-    updateMask: {
-      paths: ['shard_count'],
-    },
+    updateMask: updateMask,
   };
 
-  const [operation] = await memorystoreClusterClient.updateCluster(request);
+  const requestValkey = {
+    instance: {
+      name: `projects/${cluster.projectId}/locations/${cluster.regionId}/instances/${cluster.clusterId}`,
+      shardCount: suggestedSize,
+    },
+    updateMask: updateMask,
+  };
+
+  const [operation] =
+    cluster.engine === AutoscalerEngine.REDIS
+      ? await memorystoreRedisClient.updateCluster(requestRedis)
+      : await memorystoreValkeyClient.updateInstance(requestValkey);
+
   logger.debug({
     message: `Started the scaling operation: ${operation.name}`,
     projectId: cluster.projectId,
     regionId: cluster.regionId,
     clusterId: cluster.clusterId,
   });
-  return operation.name || null;
+  return operation?.name || null;
 }
 
 /**
@@ -435,7 +447,7 @@ async function processScalingRequest(cluster, autoscalerState) {
         `----- ${cluster.projectId}/${cluster.regionId}/${cluster.clusterId}: has ${cluster.currentSize} ${cluster.units}, no scaling possible ` +
         `- last scaling operation (${savedState.scalingMethod} to ${savedState.scalingRequestedSize}) is still in progress. Started: ${convertMillisecToHumanReadable(
           autoscalerState.now - savedState.lastScalingTimestamp,
-        )} ago).`,
+        )} ago.`,
       projectId: cluster.projectId,
       regionId: cluster.regionId,
       clusterId: cluster.clusterId,
@@ -544,6 +556,35 @@ async function scaleMemorystoreClusterLocal(cluster) {
 }
 
 /**
+ * @param {string} operationId
+ * @param {AutoscalerEngine} engine
+ * @return {Promise<[Operation]>}
+ */
+async function getOperationState(operationId, engine) {
+  const headers = {
+    otherArgs: {headers: {['x-goog-request-params']: `Name=${operationId}`}},
+  };
+
+  if (engine === AutoscalerEngine.REDIS) {
+    return await memorystoreRedisClient.getOperation(
+      RedisClusterProtos.google.longrunning.GetOperationRequest.fromObject({
+        name: operationId,
+      }),
+      headers,
+    );
+  } else if (engine === AutoscalerEngine.VALKEY) {
+    return await memorystoreValkeyClient.getOperation(
+      MemorystoreProtos.google.longrunning.GetOperationRequest.fromObject({
+        name: operationId,
+      }),
+      headers,
+    );
+  } else {
+    throw new Error(`Unknown engine retriving LRO state: ${engine}`);
+  }
+}
+
+/**
  * Read state and check status of any LRO...
  *
  * @param {AutoscalerMemorystoreCluster} cluster
@@ -558,57 +599,69 @@ async function readStateCheckOngoingLRO(cluster, autoscalerState) {
     return savedState;
   }
 
-  // Check LRO status...
-
-  // The Node.JS redis cluster client library can in theory get Operation
-  // status, using the checkUpdateClusterProgress() API, as at mar 2024, it is
-  // broken and does not return any results.
-  //
-  // So we use the Redis (yes, non-cluster) REST api here to get the Operation
-  // status.
-  //
   try {
-    const {data: operationState} =
-      await redisApi.projects.locations.operations.get({
-        name: savedState.scalingOperationId,
-      });
+    const [operationState] = await getOperationState(
+      savedState.scalingOperationId,
+      cluster.engine,
+    );
 
     if (!operationState) {
       throw new Error(
         `GetOperation(${savedState.scalingOperationId}) returned no results`,
       );
     }
-    // Check metadata type
-    if (
-      !operationState.metadata ||
-      operationState.metadata['@type'] !==
-        'type.googleapis.com/google.cloud.redis.cluster.v1.OperationMetadata'
-    ) {
+
+    /** @type {RedisClusterProtos.google.cloud.redis.cluster.v1.OperationMetadata|MemorystoreProtos.google.cloud.memorystore.v1.OperationMetadata} */
+    let metadata;
+    try {
+      if (
+        operationState.metadata?.value == null ||
+        (operationState.metadata?.type_url !==
+          RedisClusterProtos.google.cloud.redis.cluster.v1.OperationMetadata.getTypeUrl() &&
+          operationState.metadata?.type_url !==
+            MemorystoreProtos.google.cloud.memorystore.v1.OperationMetadata.getTypeUrl())
+      ) {
+        throw new Error('no metadata in response');
+      }
+      if (cluster.engine === AutoscalerEngine.REDIS) {
+        metadata =
+          RedisClusterProtos.google.cloud.redis.cluster.v1.OperationMetadata.decode(
+            /** @type {any} */ (operationState.metadata).value,
+          );
+      } else if (cluster.engine === AutoscalerEngine.VALKEY) {
+        metadata =
+          MemorystoreProtos.google.cloud.memorystore.v1.OperationMetadata.decode(
+            /** @type {any} */ (operationState.metadata).value,
+          );
+      } else {
+        throw new Error(
+          `Unknown engine for operation metadata decode: ${cluster.engine}`,
+        );
+      }
+    } catch (e) {
       throw new Error(
-        `GetOperation(${savedState.scalingOperationId}) contained no OperationMetadata`,
+        `GetOperation(${savedState.scalingOperationId}) could not decode OperationMetadata: ${e}`,
       );
     }
 
-    const metadata = /**
-     * @see https://cloud.google.com/memorystore/docs/cluster/reference/rest/Shared.Types/ListOperationsResponse#Operation
-     *
-     * @type {{
-     * createTime: string,
-     * endTime: string,
-     * target: string,
-     * verb: string,
-     * statusDetail: any
-     * requestedCancellation: boolean
-     * apiVersion: string
-     * }} */ (operationState.metadata);
+    const createTimeMillis =
+      metadata.createTime?.seconds == null || metadata.createTime.nanos == null
+        ? 0
+        : Number(metadata.createTime.seconds) * 1000 +
+          Math.floor(metadata.createTime.nanos / 1_000_000);
+    const createTimeStamp = new Date(createTimeMillis).toISOString();
+    const endTimeMillis =
+      metadata.endTime?.seconds == null || metadata.endTime.nanos == null
+        ? 0
+        : Number(metadata.endTime.seconds) * 1000 +
+          Math.floor(metadata.endTime.nanos / 1_000_000);
+    const endTimeStamp = new Date(endTimeMillis).toISOString();
 
     if (operationState.done) {
       if (!operationState.error) {
         // Completed successfully.
-        const endTimestamp =
-          metadata.endTime == null ? 0 : Date.parse(metadata.endTime);
         logger.info({
-          message: `----- ${cluster.projectId}/${cluster.regionId}/${cluster.clusterId}: Last scaling request for size ${savedState.scalingRequestedSize} SUCCEEDED. Started: ${metadata.createTime}, completed: ${metadata.endTime}`,
+          message: `----- ${cluster.projectId}/${cluster.regionId}/${cluster.clusterId}: Last scaling request for size ${savedState.scalingRequestedSize} SUCCEEDED. Started: ${createTimeStamp}, completed: ${endTimeStamp}`,
           projectId: cluster.projectId,
           regionId: cluster.regionId,
           clusterId: cluster.clusterId,
@@ -616,8 +669,8 @@ async function readStateCheckOngoingLRO(cluster, autoscalerState) {
         });
 
         // Set completion time in SavedState
-        if (endTimestamp) {
-          savedState.lastScalingCompleteTimestamp = endTimestamp;
+        if (endTimeMillis) {
+          savedState.lastScalingCompleteTimestamp = endTimeMillis;
         } else {
           // invalid end date, assume start date...
           logger.warn(
@@ -651,7 +704,7 @@ async function readStateCheckOngoingLRO(cluster, autoscalerState) {
       } else {
         // Last operation failed with an error
         logger.error({
-          message: `----- ${cluster.projectId}/${cluster.regionId}/${cluster.clusterId}: Last scaling request for size ${savedState.scalingRequestedSize} FAILED: ${operationState.error?.message}. Started: ${metadata.createTime}, completed: ${metadata.endTime}`,
+          message: `----- ${cluster.projectId}/${cluster.regionId}/${cluster.clusterId}: Last scaling request for size ${savedState.scalingRequestedSize} FAILED: ${operationState.error?.message}. Started: ${createTimeStamp}, completed: ${endTimeStamp}`,
           projectId: cluster.projectId,
           regionId: cluster.regionId,
           clusterId: cluster.clusterId,
@@ -677,7 +730,7 @@ async function readStateCheckOngoingLRO(cluster, autoscalerState) {
     } else {
       if (!!metadata.requestedCancellation) {
         logger.info({
-          message: `----- ${cluster.projectId}/${cluster.regionId}/${cluster.clusterId}: Last scaling request for ${savedState.scalingRequestedSize} CANCEL REQUESTED. Started: ${metadata?.createTime}`,
+          message: `----- ${cluster.projectId}/${cluster.regionId}/${cluster.clusterId}: Last scaling request for ${savedState.scalingRequestedSize} CANCEL REQUESTED. Started: ${createTimeStamp}`,
           projectId: cluster.projectId,
           regionId: cluster.regionId,
           clusterId: cluster.clusterId,
@@ -685,7 +738,7 @@ async function readStateCheckOngoingLRO(cluster, autoscalerState) {
         });
       } else {
         logger.info({
-          message: `----- ${cluster.projectId}/${cluster.regionId}/${cluster.clusterId}: Last scaling request for ${savedState.scalingRequestedSize} IN PROGRESS. Started: ${metadata?.createTime}`,
+          message: `----- ${cluster.projectId}/${cluster.regionId}/${cluster.clusterId}: Last scaling request for ${savedState.scalingRequestedSize} IN PROGRESS. Started: ${createTimeStamp}`,
           projectId: cluster.projectId,
           regionId: cluster.regionId,
           clusterId: cluster.clusterId,

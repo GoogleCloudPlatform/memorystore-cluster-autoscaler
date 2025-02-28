@@ -26,8 +26,12 @@ const monitoring = require('@google-cloud/monitoring');
 const {logger} = require('../../autoscaler-common/logger');
 const {PubSub} = require('@google-cloud/pubsub');
 const {CloudRedisClusterClient} = require('@google-cloud/redis-cluster');
+const {MemorystoreClient} = require('@google-cloud/memorystore');
 const Counters = require('./counters.js');
-const {AutoscalerUnits} = require('../../autoscaler-common/types');
+const {
+  AutoscalerEngine,
+  AutoscalerUnits,
+} = require('../../autoscaler-common/types');
 const {CLUSTER_SIZE_MIN} = require('../../autoscaler-common/config-parameters');
 const assertDefined = require('../../autoscaler-common/assert-defined');
 const {version: packageVersion} = require('../../../package.json');
@@ -46,15 +50,19 @@ const {ConfigValidator} = require('./config-validator');
  *   } MemorystoreClusterMetric
  */
 
-const metricsClient = new monitoring.MetricServiceClient();
-const pubSub = new PubSub();
-const memorystoreClusterClient = new CloudRedisClusterClient({
+const userAgentMetadata = {
   libName: 'cloud-solutions',
   libVersion: `memorystore-cluster-autoscaler-poller-usage-v${packageVersion}`,
-});
+};
+
+const metricsClient = new monitoring.MetricServiceClient();
+const pubSub = new PubSub();
+const memorystoreRedisClient = new CloudRedisClusterClient(userAgentMetadata);
+const memorystoreValkeyClient = new MemorystoreClient(userAgentMetadata);
 const configValidator = new ConfigValidator();
 
 const baseDefaults = {
+  engine: AutoscalerEngine.REDIS,
   scaleOutCoolingMinutes: 10,
   scaleInCoolingMinutes: 20,
   minFreeMemoryPercent: 30,
@@ -78,52 +86,37 @@ const metricDefaults = {
 /**
  * Get metadata for Memorystore cluster
  *
- * @param {string} projectId
- * @param {string} regionId
- * @param {string} clusterId
- * @param {AutoscalerUnits} units SHARDS
+ * @param {AutoscalerMemorystoreCluster} cluster
  * @return {Promise<MemorystoreClusterMetadata>}
  */
-async function getMemorystoreClusterMetadata(
-  projectId,
-  regionId,
-  clusterId,
-  units,
-) {
+async function getMemorystoreClusterMetadata(cluster) {
   logger.info({
-    message: `----- ${projectId}/${regionId}/${clusterId}: Metadata -----`,
-    projectId: projectId,
-    regionId: regionId,
-    clusterId: clusterId,
+    message: `----- ${cluster.projectId}/${cluster.regionId}/${cluster.clusterId}: Metadata -----`,
+    projectId: cluster.projectId,
+    regionId: cluster.regionId,
+    clusterId: cluster.clusterId,
   });
 
+  const instancePlural =
+    cluster.engine === AutoscalerEngine.REDIS ? 'clusters' : 'instances';
   const request = {
-    name: `projects/${projectId}/locations/${regionId}/clusters/${clusterId}`,
+    name: `projects/${cluster.projectId}/locations/${cluster.regionId}/${instancePlural}/${cluster.clusterId}`,
   };
-
-  const [metadata] = await memorystoreClusterClient.getCluster(request);
-
-  logger.debug({
-    message: `shardCount:   ${metadata['shardCount']}`,
-    projectId: projectId,
-    regionID: regionId,
-    clusterId: clusterId,
-  });
-  logger.debug({
-    message: `sizeGb:       ${metadata['sizeGb']}`,
-    projectId: projectId,
-    regionID: regionId,
-    clusterId: clusterId,
-  });
+  const [metadata] =
+    cluster.engine === AutoscalerEngine.REDIS
+      ? await memorystoreRedisClient.getCluster(request)
+      : await memorystoreValkeyClient.getInstance(request);
 
   const clusterMetadata = {
-    currentSize:
-      units === AutoscalerUnits.SHARDS
-        ? assertDefined(metadata['shardCount'])
-        : assertDefined(metadata['sizeGb']),
-    shardCount: assertDefined(metadata['shardCount']),
-    sizeGb: assertDefined(metadata['sizeGb']),
+    currentSize: assertDefined(metadata['shardCount']),
   };
+
+  logger.debug({
+    message: `shardCount: ${clusterMetadata.currentSize}`,
+    projectId: cluster.projectId,
+    regionId: cluster.regionId,
+    clusterId: cluster.clusterId,
+  });
 
   return clusterMetadata;
 }
@@ -166,41 +159,41 @@ async function postPubSubMessage(cluster, metrics) {
 
 /**
  * Creates the base filter that should be prepended to all metric filters
- * @param {string} projectId
- * @param {string} regionId
- * @param {string} clusterId
+ * @param {AutoscalerMemorystoreCluster} cluster
  * @return {string} filter
  */
-function createBaseFilter(projectId, regionId, clusterId) {
+function createBaseFilter(cluster) {
+  const resourceType =
+    cluster.engine === AutoscalerEngine.REDIS
+      ? 'redis.googleapis.com/Cluster'
+      : 'memorystore.googleapis.com/Instance';
+  const instanceSingular =
+    cluster.engine === AutoscalerEngine.REDIS ? 'cluster' : 'instance';
   return (
-    'resource.type="redis.googleapis.com/Cluster" AND ' +
-    'project="' +
-    projectId +
-    '" AND ' +
-    'resource.labels.location="' +
-    regionId +
-    '" AND ' +
-    'resource.labels.cluster_id="' +
-    clusterId +
-    '" AND '
+    `resource.type="${resourceType}" AND ` +
+    `project="${cluster.projectId}" AND ` +
+    `resource.labels.location="${cluster.regionId}" AND ` +
+    `resource.labels.${instanceSingular}_id="${cluster.clusterId}" AND `
   );
 }
 
 /**
  * Build the list of metrics to request
  *
- * @param {string} projectId
- * @param {string} regionId
- * @param {string} clusterId
+ * @param {AutoscalerMemorystoreCluster} cluster
  * @return {MemorystoreClusterMetric[]} metrics to request
  */
-function buildMetrics(projectId, regionId, clusterId) {
+function buildMetrics(cluster) {
+  const metricsPrefix =
+    cluster.engine === AutoscalerEngine.REDIS
+      ? 'redis.googleapis.com/cluster'
+      : 'memorystore.googleapis.com/instance';
   const metrics = [
     {
       name: 'cpu_maximum_utilization',
       filter:
-        createBaseFilter(projectId, regionId, clusterId) +
-        'metric.type="redis.googleapis.com/cluster/cpu/maximum_utilization" ' +
+        createBaseFilter(cluster) +
+        `metric.type="${metricsPrefix}/cpu/maximum_utilization" ` +
         'AND metric.labels.role="primary"', // Only present for CPU metrics
       reducer: 'REDUCE_MEAN',
       aligner: 'ALIGN_MAX',
@@ -209,8 +202,8 @@ function buildMetrics(projectId, regionId, clusterId) {
     {
       name: 'cpu_average_utilization',
       filter:
-        createBaseFilter(projectId, regionId, clusterId) +
-        'metric.type="redis.googleapis.com/cluster/cpu/average_utilization" ' +
+        createBaseFilter(cluster) +
+        `metric.type="${metricsPrefix}/cpu/average_utilization" ` +
         'AND metric.labels.role="primary"', // Only present for CPU metrics
       reducer: 'REDUCE_MEAN',
       aligner: 'ALIGN_MAX',
@@ -219,8 +212,8 @@ function buildMetrics(projectId, regionId, clusterId) {
     {
       name: 'memory_maximum_utilization',
       filter:
-        createBaseFilter(projectId, regionId, clusterId) +
-        'metric.type="redis.googleapis.com/cluster/memory/maximum_utilization"',
+        createBaseFilter(cluster) +
+        `metric.type="${metricsPrefix}/memory/maximum_utilization"`,
       reducer: 'REDUCE_MEAN',
       aligner: 'ALIGN_MAX',
       period: 60,
@@ -228,8 +221,8 @@ function buildMetrics(projectId, regionId, clusterId) {
     {
       name: 'memory_average_utilization',
       filter:
-        createBaseFilter(projectId, regionId, clusterId) +
-        'metric.type="redis.googleapis.com/cluster/memory/average_utilization"',
+        createBaseFilter(cluster) +
+        `metric.type="${metricsPrefix}/memory/average_utilization"`,
       reducer: 'REDUCE_MEAN',
       aligner: 'ALIGN_MAX',
       period: 60,
@@ -237,8 +230,8 @@ function buildMetrics(projectId, regionId, clusterId) {
     {
       name: 'maximum_evicted_keys',
       filter:
-        createBaseFilter(projectId, regionId, clusterId) +
-        'metric.type="redis.googleapis.com/cluster/stats/maximum_evicted_keys"',
+        createBaseFilter(cluster) +
+        `metric.type="${metricsPrefix}/stats/maximum_evicted_keys"`,
       reducer: 'REDUCE_MEAN',
       aligner: 'ALIGN_MAX',
       period: 60,
@@ -246,8 +239,8 @@ function buildMetrics(projectId, regionId, clusterId) {
     {
       name: 'average_evicted_keys',
       filter:
-        createBaseFilter(projectId, regionId, clusterId) +
-        'metric.type="redis.googleapis.com/cluster/stats/average_evicted_keys"',
+        createBaseFilter(cluster) +
+        `metric.type="${metricsPrefix}/stats/average_evicted_keys"`,
       reducer: 'REDUCE_MEAN',
       aligner: 'ALIGN_MAX',
       period: 60,
@@ -449,11 +442,7 @@ async function parseAndEnrichPayload(payload) {
     }
 
     // Assemble the metrics
-    clusters[clusterIdx].metrics = buildMetrics(
-      clusters[clusterIdx].projectId,
-      clusters[clusterIdx].regionId,
-      clusters[clusterIdx].clusterId,
-    );
+    clusters[clusterIdx].metrics = buildMetrics(clusters[clusterIdx]);
 
     if (customMetrics != null) {
       for (let customIdx = 0; customIdx < customMetrics.length; customIdx++) {
@@ -476,12 +465,7 @@ async function parseAndEnrichPayload(payload) {
               cluster.clusterId,
             )
           ) {
-            metric.filter =
-              createBaseFilter(
-                cluster.projectId,
-                cluster.regionId,
-                cluster.clusterId,
-              ) + metric.filter;
+            metric.filter = createBaseFilter(cluster) + metric.filter;
             cluster.metrics.push(metric);
             logger.debug({
               message:
@@ -499,12 +483,7 @@ async function parseAndEnrichPayload(payload) {
     try {
       clusters[clusterIdx] = {
         ...clusters[clusterIdx],
-        ...(await getMemorystoreClusterMetadata(
-          clusters[clusterIdx].projectId,
-          clusters[clusterIdx].regionId,
-          clusters[clusterIdx].clusterId,
-          clusters[clusterIdx].units.toUpperCase(),
-        )),
+        ...(await getMemorystoreClusterMetadata(clusters[clusterIdx])),
       };
       clustersFound.push(clusters[clusterIdx]);
     } catch (err) {

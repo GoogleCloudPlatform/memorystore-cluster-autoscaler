@@ -91,6 +91,8 @@ module "autoscaler-network" {
   region     = var.region
   project_id = var.project_id
   ip_range   = var.ip_range
+
+  memorystore_engine = var.memorystore_engine // Required for PSC service class
 }
 
 module "autoscaler-memorystore-cluster" {
@@ -111,6 +113,7 @@ module "autoscaler-memorystore-cluster" {
 
   memorystore_shard_count   = var.memorystore_shard_count
   memorystore_replica_count = var.memorystore_replica_count
+  memorystore_engine        = var.memorystore_engine
 
   depends_on = [module.autoscaler-network]
 }
@@ -133,4 +136,5 @@ module "autoscaler-monitoring" {
   region                   = var.region
   project_id               = var.project_id
   memorystore_cluster_name = var.memorystore_cluster_name
+  memorystore_engine       = var.memorystore_engine
 }

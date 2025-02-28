@@ -20,6 +20,7 @@ locals {
       "projectId" : "${var.project_id}",
       "regionId" : "${var.location}",
       "clusterId" : "${var.memorystore_cluster_name}",
+      "engine" : "${var.memorystore_engine}",
       "scalerPubSubTopic" : "${var.target_pubsub_topic}",
       "units" : "${var.units}",
       "minSize" : var.min_size,

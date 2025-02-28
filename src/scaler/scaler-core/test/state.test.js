@@ -93,6 +93,7 @@ const BASE_CONFIG = {
   projectId: 'myProject',
   regionId: 'myRegion',
   clusterId: 'myCluster',
+  engine: 'REDIS',
   stateProjectId: 'stateProject',
   scaleOutCoolingMinutes: 20,
   scaleInCoolingMinutes: 20,
@@ -105,8 +106,6 @@ const BASE_CONFIG = {
   minSize: 5,
   maxSize: 10,
   stepSize: 1,
-  shardCount: 5,
-  sizeGb: 64,
 };
 
 describe('stateFirestoreTests', () => {

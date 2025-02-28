@@ -187,6 +187,7 @@ In this section you prepare your project for deployment.
       compute.googleapis.com \
       container.googleapis.com \
       iam.googleapis.com \
+      memorystore.googleapis.com \
       networkconnectivity.googleapis.com \
       pubsub.googleapis.com \
       logging.googleapis.com \

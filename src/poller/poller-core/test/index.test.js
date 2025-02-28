@@ -26,41 +26,93 @@ const sinon = require('sinon');
 
 const app = rewire('../index.js');
 
+const {AutoscalerEngine} = require('../../../autoscaler-common/types');
+
+const createBaseFilter = app.__get__('createBaseFilter');
 const buildMetrics = app.__get__('buildMetrics');
 const parseAndEnrichPayload = app.__get__('parseAndEnrichPayload');
 const validateCustomMetric = app.__get__('validateCustomMetric');
 
+describe('#createBaseFilter', () => {
+  const fakeClusterRedis = {
+    projectId: 'fakeProjectIdRedis',
+    regionId: 'fakeRegionIdRedis',
+    clusterId: 'fakeClusterIdRedis',
+    engine: AutoscalerEngine.REDIS,
+  };
+
+  const fakeClusterValkey = {
+    projectId: 'fakeProjectIdValkey',
+    regionId: 'fakeRegionIdValkey',
+    clusterId: 'fakeClusterIdValkey',
+    engine: AutoscalerEngine.VALKEY,
+  };
+
+  it('should insert the projectId (Redis)', () => {
+    createBaseFilter(fakeClusterRedis).should.match(/fakeProjectIdRedis/);
+  });
+
+  it('should insert the regionId (Redis)', () => {
+    createBaseFilter(fakeClusterRedis).should.match(/fakeRegionIdRedis/);
+  });
+
+  it('should insert the clusterId (Redis)', () => {
+    createBaseFilter(fakeClusterRedis).should.match(/fakeClusterIdRedis/);
+  });
+
+  it('should include redis resource type (Redis)', () => {
+    createBaseFilter(fakeClusterRedis).should.match(
+      /redis\.googleapis\.com\/Cluster/,
+    );
+  });
+
+  it('should include cluster_id label (Redis)', () => {
+    createBaseFilter(fakeClusterRedis).should.match(/cluster_id/);
+  });
+
+  it('should insert the projectId (Valkey)', () => {
+    createBaseFilter(fakeClusterValkey).should.match(/fakeProjectIdValkey/);
+  });
+
+  it('should insert the regionId (Valkey)', () => {
+    createBaseFilter(fakeClusterValkey).should.match(/fakeRegionIdValkey/);
+  });
+
+  it('should insert the clusterId (Valkey)', () => {
+    createBaseFilter(fakeClusterValkey).should.match(/fakeClusterIdValkey/);
+  });
+
+  it('should include valkey resource type (Valkey)', () => {
+    createBaseFilter(fakeClusterValkey).should.match(
+      /memorystore\.googleapis\.com\/Instance/,
+    );
+  });
+
+  it('should include instance_id label (Valkey)', () => {
+    createBaseFilter(fakeClusterValkey).should.match(/instance_id/);
+  });
+});
+
 describe('#buildMetrics', () => {
+  const fakeCluster = {
+    projectId: 'fakeProjectId',
+    regionId: 'fakeRegionId',
+    clusterId: 'fakeClusterId',
+  };
   it('should return 6 metrics', () => {
-    buildMetrics(
-      'fakeProjectId',
-      'fakeRegionId',
-      'fakeClusterId',
-    ).should.have.length(6);
+    buildMetrics(fakeCluster).should.have.length(6);
   });
 
   it('should insert the projectId', () => {
-    buildMetrics(
-      'fakeProjectId',
-      'fakeRegionId',
-      'fakeClusterId',
-    )[0].filter.should.have.match(/fakeProjectId/);
+    buildMetrics(fakeCluster)[0].filter.should.have.match(/fakeProjectId/);
   });
 
   it('should insert the regionId', () => {
-    buildMetrics(
-      'fakeRegionId',
-      'fakeRegionId',
-      'fakeClusterId',
-    )[0].filter.should.have.match(/fakeRegionId/);
+    buildMetrics(fakeCluster)[0].filter.should.have.match(/fakeRegionId/);
   });
 
   it('should insert the clusterId', () => {
-    buildMetrics(
-      'fakeProjectId',
-      'fakeRegionId',
-      'fakeClusterId',
-    )[0].filter.should.have.match(/fakeClusterId/);
+    buildMetrics(fakeCluster)[0].filter.should.have.match(/fakeClusterId/);
   });
 });
 
@@ -111,7 +163,7 @@ describe('#parseAndEnrichPayload', () => {
       },
     ]);
 
-    const stub = sinon.stub().resolves({currentSize: 5, shardCount: 5});
+    const stub = sinon.stub().resolves({currentSize: 5});
     const unset = app.__set__('getMemorystoreClusterMetadata', stub);
 
     const mergedConfig = await parseAndEnrichPayload(payload);
@@ -132,7 +184,7 @@ describe('#parseAndEnrichPayload', () => {
       },
     ]);
 
-    const stub = sinon.stub().resolves({currentSize: 5, shardCount: 5});
+    const stub = sinon.stub().resolves({currentSize: 5});
     const unset = app.__set__('getMemorystoreClusterMetadata', stub);
 
     const mergedConfig = await parseAndEnrichPayload(payload);
@@ -153,7 +205,7 @@ describe('#parseAndEnrichPayload', () => {
       },
     ]);
 
-    const stub = sinon.stub().resolves({currentSize: 5, shardCount: 5});
+    const stub = sinon.stub().resolves({currentSize: 5});
     const unset = app.__set__('getMemorystoreClusterMetadata', stub);
 
     const mergedConfig = await parseAndEnrichPayload(payload);
@@ -172,7 +224,7 @@ describe('#parseAndEnrichPayload', () => {
       },
     ]);
 
-    const stub = sinon.stub().resolves({currentSize: 5, shardCount: 5});
+    const stub = sinon.stub().resolves({currentSize: 5});
     const unset = app.__set__('getMemorystoreClusterMetadata', stub);
 
     const mergedConfig = await parseAndEnrichPayload(payload);
@@ -193,7 +245,7 @@ describe('#parseAndEnrichPayload', () => {
       },
     ]);
 
-    const stub = sinon.stub().resolves({currentSize: 5, shardCount: 5});
+    const stub = sinon.stub().resolves({currentSize: 5});
     const unset = app.__set__('getMemorystoreClusterMetadata', stub);
 
     const mergedConfig = await parseAndEnrichPayload(payload);
@@ -216,7 +268,7 @@ describe('#parseAndEnrichPayload', () => {
       },
     ]);
 
-    const stub = sinon.stub().resolves({currentSize: 5, shardCount: 5});
+    const stub = sinon.stub().resolves({currentSize: 5});
     const unset = app.__set__('getMemorystoreClusterMetadata', stub);
 
     await parseAndEnrichPayload(payload).should.be.rejectedWith(Error, {

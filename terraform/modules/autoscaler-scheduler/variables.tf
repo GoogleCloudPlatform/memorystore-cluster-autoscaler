@@ -40,6 +40,15 @@ variable "memorystore_cluster_name" {
   type = string
 }
 
+variable "memorystore_engine" {
+  type        = string
+  description = "The underlying engine to use"
+  validation {
+    condition     = contains(["REDIS", "VALKEY"], var.memorystore_engine)
+    error_message = "Valid values for var: memorystore_engine are (REDIS, VALKEY)."
+  }
+}
+
 variable "target_pubsub_topic" {
   type = string
 }

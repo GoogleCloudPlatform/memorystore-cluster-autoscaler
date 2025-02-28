@@ -20,17 +20,23 @@ terraform {
   }
 }
 
+locals {
+  is_redis = var.memorystore_engine == "REDIS"
+}
+
 resource "google_redis_cluster" "memorystore_cluster" {
-  count       = var.terraform_memorystore_cluster ? 1 : 0
+  count       = var.terraform_memorystore_cluster && local.is_redis ? 1 : 0
   name        = var.memorystore_cluster_name
   shard_count = var.memorystore_shard_count
-  psc_configs {
-    network = var.network
-  }
+
   region                  = var.region
   replica_count           = var.memorystore_replica_count
   transit_encryption_mode = "TRANSIT_ENCRYPTION_MODE_DISABLED"
   authorization_mode      = "AUTH_MODE_DISABLED"
+
+  psc_configs {
+    network = var.network
+  }
 
   zone_distribution_config {
     mode = "MULTI_ZONE"
@@ -43,48 +49,32 @@ resource "google_redis_cluster" "memorystore_cluster" {
   }
 }
 
-resource "random_id" "role_suffix" {
-  byte_length = 4
-}
+resource "google_memorystore_instance" "memorystore_cluster" {
+  count       = var.terraform_memorystore_cluster && local.is_redis ? 0 : 1
+  instance_id = var.memorystore_cluster_name
+  shard_count = var.memorystore_shard_count
 
-# Limited role for Poller
-resource "google_project_iam_custom_role" "metrics_viewer_iam_role" {
-  project     = var.project_id
-  role_id     = "memorystoreClusterAutoscalerMetricsViewer_${random_id.role_suffix.hex}"
-  title       = "Memorystore Cluster Autoscaler Metrics Viewer Role"
-  description = "Allows a principal to get Memorystore Cluster instances and view time series metrics"
-  permissions = [
-    "redis.clusters.list",
-    "redis.clusters.get",
-    "monitoring.timeSeries.list"
-  ]
-}
+  location                = var.region
+  replica_count           = var.memorystore_replica_count
+  transit_encryption_mode = "TRANSIT_ENCRYPTION_DISABLED"
+  authorization_mode      = "AUTH_DISABLED"
 
-# Assign custom role to Poller
-resource "google_project_iam_member" "poller_metrics_viewer_iam" {
-  role    = google_project_iam_custom_role.metrics_viewer_iam_role.name
-  project = var.project_id
-  member  = "serviceAccount:${var.poller_sa_email}"
-}
+  engine_version = var.valkey_version
 
-# Limited role for Scaler
-resource "google_project_iam_custom_role" "capacity_manager_iam_role" {
-  project     = var.project_id
-  role_id     = "memorystoreClusterAutoscalerCapacityManager_${random_id.role_suffix.hex}"
-  title       = "Memorystore Cluster Autoscaler Capacity Manager Role"
-  description = "Allows a principal to scale Memorystore Cluster instances"
-  permissions = [
-    "redis.clusters.get",
-    "redis.clusters.update",
-    "redis.operations.get"
-  ]
-}
+  desired_psc_auto_connections {
+    network    = var.network
+    project_id = var.project_id
+  }
 
-# Assign custom role to Scaler
-resource "google_project_iam_member" "scaler_update_capacity_iam" {
-  role    = google_project_iam_custom_role.capacity_manager_iam_role.name
-  project = var.project_id
-  member  = "serviceAccount:${var.scaler_sa_email}"
+  zone_distribution_config {
+    mode = "MULTI_ZONE"
+  }
+
+  deletion_protection_enabled = false
+
+  lifecycle {
+    ignore_changes = [shard_count, replica_count]
+  }
 }
 
 resource "google_dns_record_set" "memorystore_cluster" {
@@ -95,5 +85,5 @@ resource "google_dns_record_set" "memorystore_cluster" {
 
   managed_zone = var.dns_zone.name
 
-  rrdatas = [one(google_redis_cluster.memorystore_cluster).discovery_endpoints[0].address]
+  rrdatas = local.is_redis ? [one(google_redis_cluster.memorystore_cluster).discovery_endpoints[0].address] : [one(google_memorystore_instance.memorystore_cluster).discovery_endpoints[0].address]
 }

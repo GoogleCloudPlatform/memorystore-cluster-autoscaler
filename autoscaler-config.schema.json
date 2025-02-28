@@ -35,6 +35,11 @@
           "minLength": 2,
           "description": "Instance ID of the Cloud Memorystore cluster to be monitored."
         },
+        "engine": {
+          "enum": ["REDIS", "VALKEY"],
+          "description": "The underlying Memorystore engine to use.",
+          "default": "REDIS"
+        },
         "units": {
           "enum": ["SHARDS"],
           "description": "Specifies the units how the Cloud Memorystore cluster capacity will be measured.",

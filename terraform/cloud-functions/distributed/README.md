@@ -167,6 +167,7 @@ Autoscaler infrastructure, with the exception of Cloud Scheduler, lives.
         eventarc.googleapis.com \
         iam.googleapis.com \
         networkconnectivity.googleapis.com \
+        memorystore.googleapis.com \
         pubsub.googleapis.com \
         logging.googleapis.com \
         monitoring.googleapis.com \

@@ -94,6 +94,12 @@ variable "ip_range" {
   default     = "10.0.0.0/24"
 }
 
+variable "memorystore_engine" {
+  description = "The underlying engine to use"
+  type        = string
+  default     = "REDIS"
+}
+
 locals {
   # By default, these config files produce a per-project deployment
   # If you want a centralized deployment instead, then specify

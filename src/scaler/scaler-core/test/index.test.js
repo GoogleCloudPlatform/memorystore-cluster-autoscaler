@@ -25,6 +25,13 @@ const {
   createStateData,
 } = require('./test-utils.js');
 const {afterEach} = require('mocha');
+const protobufjs = require('protobufjs');
+const {AutoscalerEngine} = require('../../../autoscaler-common/types');
+const {CloudRedisClusterClient} = require('@google-cloud/redis-cluster');
+const {
+  MemorystoreClient,
+  protos: MemorystoreProtos,
+} = require('@google-cloud/memorystore');
 
 /**
  * @typedef {import('../../../autoscaler-common/types')
@@ -98,6 +105,82 @@ describe('#getScalingMethod', () => {
     const scalingFunction = getScalingMethod(cluster);
     assert.isFunction(scalingFunction.calculateSize);
     assert.equals(cluster.scalingMethod, 'STEPWISE');
+  });
+});
+
+describe('#scaleMemorystoreCluster', () => {
+  const app = rewire('../index.js');
+  const scaleMemorystoreCluster = app.__get__('scaleMemorystoreCluster');
+  /** @type {sinon.SinonStubbedInstance<CloudRedisClusterClient>} */
+  let memorystoreRedisClientStub;
+  /** @type {sinon.SinonStubbedInstance<MemorystoreClient>} */
+  let memorystoreValkeyClientStub;
+
+  const cluster = {
+    projectId: 'test-project',
+    regionId: 'test-region',
+    clusterId: 'test-cluster',
+    currentSize: 5,
+    units: 'SHARDS',
+    engine: AutoscalerEngine.REDIS, // Default to REDIS
+  };
+
+  const suggestedSize = 10;
+  const expectedOperation = {name: 'test-operation'};
+
+  beforeEach(() => {
+    memorystoreRedisClientStub = sinon.createStubInstance(
+      CloudRedisClusterClient,
+    );
+    memorystoreValkeyClientStub = sinon.createStubInstance(MemorystoreClient);
+    app.__set__('memorystoreValkeyClient', memorystoreValkeyClientStub);
+    app.__set__('memorystoreRedisClient', memorystoreRedisClientStub);
+  });
+
+  afterEach(() => {
+    sinon.reset();
+    sinon.restore();
+  });
+
+  it('should call updateCluster for Redis engine', async () => {
+    cluster.engine = AutoscalerEngine.REDIS;
+    memorystoreRedisClientStub.updateCluster.resolves([expectedOperation]);
+    const operationId = await scaleMemorystoreCluster(cluster, suggestedSize);
+
+    sinon.assert.calledWith(memorystoreRedisClientStub.updateCluster, {
+      cluster: {
+        name: `projects/${cluster.projectId}/locations/${cluster.regionId}/clusters/${cluster.clusterId}`,
+        shardCount: suggestedSize,
+      },
+      updateMask: {paths: ['shard_count']},
+    });
+    sinon.assert.notCalled(memorystoreValkeyClientStub.updateInstance);
+    assert.equals(operationId, expectedOperation.name);
+  });
+
+  it('should call updateInstance for Valkey engine', async () => {
+    cluster.engine = AutoscalerEngine.VALKEY;
+    memorystoreValkeyClientStub.updateInstance.resolves([expectedOperation]);
+    const operationId = await scaleMemorystoreCluster(cluster, suggestedSize);
+
+    sinon.assert.calledWith(memorystoreValkeyClientStub.updateInstance, {
+      instance: {
+        name: `projects/${cluster.projectId}/locations/${cluster.regionId}/instances/${cluster.clusterId}`,
+        shardCount: suggestedSize,
+      },
+      updateMask: {paths: ['shard_count']},
+    });
+    sinon.assert.notCalled(memorystoreRedisClientStub.updateCluster);
+    assert.equals(operationId, expectedOperation.name);
+  });
+
+  it('should return null if operation name is undefined/null', async () => {
+    cluster.engine = AutoscalerEngine.REDIS;
+    const expectedOperation = {}; // Name is undefined
+    memorystoreRedisClientStub.updateCluster.resolves([expectedOperation]);
+    const operationId = await scaleMemorystoreCluster(cluster, suggestedSize);
+
+    assert.isNull(operationId);
   });
 });
 
@@ -371,6 +454,74 @@ describe('#withinCooldownPeriod', () => {
   });
 });
 
+describe('#getOperationState', () => {
+  const app = rewire('../index.js');
+  const getOperationState = app.__get__('getOperationState');
+  /** @type {sinon.SinonStubbedInstance<CloudRedisClusterClient>} */
+  let memorystoreRedisClientStub;
+  /** @type {sinon.SinonStubbedInstance<MemorystoreClient>} */
+  let memorystoreValkeyClientStub;
+  const operationId = 'test-operation-id';
+  const expectedHeaders = {
+    otherArgs: {
+      headers: {['x-goog-request-params']: `Name=${operationId}`},
+    },
+  };
+
+  beforeEach(() => {
+    memorystoreValkeyClientStub = sinon.createStubInstance(MemorystoreClient);
+    memorystoreRedisClientStub = sinon.createStubInstance(
+      CloudRedisClusterClient,
+    );
+
+    app.__set__('memorystoreValkeyClient', memorystoreValkeyClientStub);
+    app.__set__('memorystoreRedisClient', memorystoreRedisClientStub);
+  });
+
+  afterEach(() => {
+    sinon.reset();
+    sinon.restore();
+  });
+
+  it('should call Redis client for Redis engine', async () => {
+    await getOperationState(operationId, AutoscalerEngine.REDIS);
+
+    sinon.assert.calledOnceWithExactly(
+      memorystoreRedisClientStub.getOperation,
+      sinon.match.any,
+      expectedHeaders,
+    );
+    sinon.assert.notCalled(memorystoreValkeyClientStub.getOperation);
+  });
+
+  it('should call Valkey client for Valkey engine', async () => {
+    await getOperationState(operationId, AutoscalerEngine.VALKEY);
+
+    sinon.assert.calledOnceWithExactly(
+      memorystoreValkeyClientStub.getOperation,
+      sinon.match.any,
+      expectedHeaders,
+    );
+    sinon.assert.notCalled(memorystoreRedisClientStub.getOperation);
+  });
+
+  it('should throw error for unknown engine', async () => {
+    const engine = 'unknown-engine';
+
+    try {
+      await getOperationState(operationId, engine);
+      assert.fail('Expected an unknown engine error to be thrown');
+    } catch (err) {
+      assert.equals(
+        /** @type {Error}*/ (err).message,
+        `Unknown engine retriving LRO state: ${engine}`,
+      );
+    }
+    sinon.assert.notCalled(memorystoreRedisClientStub.getOperation);
+    sinon.assert.notCalled(memorystoreValkeyClientStub.getOperation);
+  });
+});
+
 describe('#readStateCheckOngoingLRO', () => {
   const app = rewire('../index.js');
   const readStateCheckOngoingLRO = app.__get__('readStateCheckOngoingLRO');
@@ -383,33 +534,71 @@ describe('#readStateCheckOngoingLRO', () => {
   let clusterParams;
   /** @type {sinon.SinonStubbedInstance<State>} */
   let stateStub;
-  /** @type {*} */
-  let operation;
 
   const getOperation = sinon.stub();
-  const fakeRedisAPI = {
-    projects: {
-      locations: {
-        operations: {
-          get: getOperation,
-        },
-      },
-    },
-  };
+  const memorystoreClientStub = {getOperation};
   const countersStub = {
     incScalingSuccessCounter: sinon.stub(),
     incScalingFailedCounter: sinon.stub(),
     incScalingDeniedCounter: sinon.stub(),
     recordScalingDuration: sinon.stub(),
   };
-  app.__set__('redisApi', fakeRedisAPI);
 
   const lastScalingDate = new Date('2024-01-01T12:00:00Z');
+
+  /**
+   *
+   * @param {boolean?} done
+   * @param {MemorystoreProtos.google.rpc.IStatus?} error
+   * @param {number?} createTimeMillis
+   * @param {number?} endTimeMillis
+   * @return {MemorystoreProtos.google.longrunning.Operation}
+   */
+  function buildGetOperationResponse(
+    done,
+    error,
+    createTimeMillis,
+    endTimeMillis,
+  ) {
+    const metadataBuffer = protobufjs.Writer.create();
+    MemorystoreProtos.google.cloud.memorystore.v1.OperationMetadata.encode(
+      {
+        endTime:
+          endTimeMillis == null
+            ? null
+            : {
+                seconds: endTimeMillis / 1000,
+                nanos: (endTimeMillis % 1000) * 1_000_000,
+              },
+        createTime:
+          createTimeMillis == null
+            ? null
+            : {
+                seconds: createTimeMillis / 1000,
+                nanos: (createTimeMillis % 1000) * 1_000_000,
+              },
+      },
+      metadataBuffer,
+    );
+    const metadataBufferBytes = metadataBuffer.finish();
+
+    return new MemorystoreProtos.google.longrunning.Operation({
+      done,
+      error,
+      metadata: {
+        type_url:
+          MemorystoreProtos.google.cloud.memorystore.v1.OperationMetadata.getTypeUrl(),
+        value: metadataBufferBytes,
+      },
+    });
+  }
 
   beforeEach(() => {
     clusterParams = createClusterParameters();
     stateStub = createStubState();
     app.__set__('Counters', countersStub);
+    app.__set__('memorystoreRedisClient', memorystoreClientStub);
+    app.__set__('memorystoreValkeyClient', memorystoreClientStub);
 
     // A State with an ongoing operation
     autoscalerState = {
@@ -423,17 +612,6 @@ describe('#readStateCheckOngoingLRO', () => {
       scalingMethod: 'STEPWISE',
     };
     originalAutoscalerState = {...autoscalerState};
-
-    operation = {
-      done: null,
-      error: null,
-      metadata: {
-        '@type':
-          'type.googleapis.com/google.cloud.redis.cluster.v1.OperationMetadata',
-        'endTime': null,
-        'createTime': lastScalingDate.toISOString(),
-      },
-    };
   });
 
   afterEach(() => {
@@ -493,7 +671,7 @@ describe('#readStateCheckOngoingLRO', () => {
 
   it('should clear the operation if operation.get returns null', async () => {
     stateStub.get.resolves(autoscalerState);
-    getOperation.resolves({data: null});
+    getOperation.resolves([null]);
 
     const expectedState = {
       ...originalAutoscalerState,
@@ -518,11 +696,13 @@ describe('#readStateCheckOngoingLRO', () => {
 
   it('should clear lastScaling, requestedSize if op failed with error', async () => {
     stateStub.get.resolves(autoscalerState);
-    operation.done = true;
-    operation.error = {message: 'Scaling op failed'};
-    operation.metadata.endTime = // 60 seconds after start
-      new Date(lastScalingDate.getTime() + 60_000).toISOString();
-    getOperation.resolves({data: operation});
+    const operation = buildGetOperationResponse(
+      true,
+      {code: 500, message: 'Scaling operation failed'},
+      lastScalingDate.getTime(),
+      lastScalingDate.getTime() + 60_000,
+    );
+    getOperation.resolves([operation]);
 
     const expectedState = {
       ...originalAutoscalerState,
@@ -547,8 +727,8 @@ describe('#readStateCheckOngoingLRO', () => {
 
   it('should clear the operation if no metadata', async () => {
     stateStub.get.resolves(autoscalerState);
-    operation.metadata = null;
-    getOperation.resolves({data: operation});
+    const operation = buildGetOperationResponse(true, null, null, null);
+    getOperation.resolves([operation]);
 
     const expectedState = {
       ...originalAutoscalerState,
@@ -570,10 +750,15 @@ describe('#readStateCheckOngoingLRO', () => {
     sinon.assert.calledOnce(countersStub.recordScalingDuration);
   });
 
-  it('should leave state unchanged if op not done yet', async () => {
+  it('should leave state unchanged if operation not done yet', async () => {
     stateStub.get.resolves(autoscalerState);
-    operation.done = false;
-    getOperation.resolves({data: operation});
+    const operation = buildGetOperationResponse(
+      false,
+      null,
+      lastScalingDate.getTime(),
+      null,
+    );
+    getOperation.resolves([operation]);
 
     assert.equals(
       await readStateCheckOngoingLRO(clusterParams, stateStub),
@@ -596,10 +781,14 @@ describe('#readStateCheckOngoingLRO', () => {
       scalingMethod: 'DIRECT',
     });
     // 60 seconds after start
-    const endTime = lastScalingDate.getTime() + 60_000;
-    operation.done = true;
-    operation.metadata.endTime = new Date(endTime).toISOString();
-    getOperation.resolves({data: operation});
+    const operation = buildGetOperationResponse(
+      true,
+      null,
+      lastScalingDate.getTime(),
+      lastScalingDate.getTime() + 60_000,
+    );
+
+    getOperation.resolves([operation]);
 
     const expectedState = {
       ...originalAutoscalerState,
@@ -607,7 +796,7 @@ describe('#readStateCheckOngoingLRO', () => {
       scalingRequestedSize: null,
       scalingPreviousSize: null,
       scalingMethod: null,
-      lastScalingCompleteTimestamp: endTime,
+      lastScalingCompleteTimestamp: lastScalingDate.getTime() + 60_000,
     };
     assert.equals(
       await readStateCheckOngoingLRO(clusterParams, stateStub),

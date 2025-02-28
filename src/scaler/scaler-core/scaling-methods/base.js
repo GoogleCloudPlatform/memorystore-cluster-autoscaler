@@ -255,7 +255,7 @@ function getMaxMemoryUtilization(cluster) {
  */
 function ensureMinFreeMemory(cluster, suggestedSize, scalingDirection) {
   const currentUtilization = getMaxMemoryUtilization(cluster);
-  const usedShards = cluster.shardCount * (currentUtilization / 100);
+  const usedShards = cluster.currentSize * (currentUtilization / 100);
   const safeSize = Math.ceil(
     usedShards / (1 - cluster.minFreeMemoryPercent / 100),
   );

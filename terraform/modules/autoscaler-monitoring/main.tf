@@ -14,12 +14,24 @@
  * limitations under the License.
  */
 
+locals {
+  metrics_api_domain    = "googleapis.com"
+  metrics_api_subdomain = var.memorystore_engine == "REDIS" ? "redis" : "memorystore"
+  metrics_engine_desc   = var.memorystore_engine == "REDIS" ? "cluster" : "instance"
+  metrics_prefix        = "${local.metrics_api_subdomain}.${local.metrics_api_domain}/${local.metrics_engine_desc}"
+  metrics_type          = "${local.metrics_api_subdomain}.${local.metrics_api_domain}/${title(local.metrics_engine_desc)}"
+  metrics_id_label      = "${local.metrics_engine_desc}_id"
+}
+
 resource "google_monitoring_dashboard" "dashboard" {
   project = var.project_id
 
   dashboard_json = templatefile("${path.module}/dashboard.json.tftpl", {
     region                   = var.region
     memorystore_cluster_name = var.memorystore_cluster_name
+    metrics_prefix           = local.metrics_prefix
+    metrics_type             = local.metrics_type
+    metrics_id_label         = local.metrics_id_label
 
     cpu_average_threshold_out = var.cpu_average_threshold_out
     cpu_max_threshold_out     = var.cpu_max_threshold_out

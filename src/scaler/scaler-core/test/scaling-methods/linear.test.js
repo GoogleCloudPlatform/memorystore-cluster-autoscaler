@@ -39,7 +39,7 @@ const createClusterParameters = (overrideParameters) => {
     'stepSize': 1,
     'scalingProfile': 'CPU_AND_MEMORY',
     'scalingMethod': 'LINEAR',
-    'minFreeMemoryPercent': 30,
+    'minFreeMemoryPercent': 0,
     'scaleOutCoolingMinutes': 5,
     'scaleInCoolingMinutes': 30,
     'metrics': [
@@ -291,7 +291,7 @@ describe('#linear', () => {
           {
             // Not relevant for the test, but required by base.
             'name': 'memory_maximum_utilization',
-            'value': 50,
+            'value': 0,
           },
         ],
       });

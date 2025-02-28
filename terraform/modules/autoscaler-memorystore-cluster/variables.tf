@@ -39,6 +39,21 @@ variable "subnetwork" {
   description = "The subnetwork to host the cluster in"
 }
 
+variable "memorystore_engine" {
+  type        = string
+  description = "The underlying engine to use"
+  validation {
+    condition     = contains(["REDIS", "VALKEY"], var.memorystore_engine)
+    error_message = "Valid values for var: memorystore_engine are (REDIS, VALKEY)."
+  }
+}
+
+variable "valkey_version" {
+  type        = string
+  description = "The version of the valkey engine to use"
+  default     = "VALKEY_7_2"
+}
+
 variable "poller_sa_email" {
   type        = string
   description = "The email of the poller service account"

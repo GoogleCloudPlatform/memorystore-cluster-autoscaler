@@ -101,6 +101,7 @@ npm run validate-config-file -- path/to/config_file
 | Key                      | Default Value    | Description |
 | ------------------------ | ---------------- | ----------- |
 | `units`                  | `SHARDS`         | Specifies the units for capacity. Currently `SHARDS` is the only valid unit. |
+| `engine`                 | `REDIS`          | Specifies the engine for a cluster. Options are `REDIS` and `VALKEY`. |
 | `minSize`                | 1                | Minimum number of Memorystore Cluster shards that the instance can be scaled IN to. |
 | `maxSize`                | 10               | Maximum number of Memorystore Cluster shards that the instance can be scaled OUT to. |
 | `scalingProfile`         | `CPU_AND_MEMORY` | Scaling profiles that should be used. Options are: `CPU_AND_MEMORY`, `CPU`, `MEMORY`, or `CUSTOM`. See the [scaling profiles section][autoscaler-scaling-profiles] in the Scaler component page for more information. |
@@ -130,12 +131,18 @@ polling the time series of the following:
 *   `redis.googleapis.com/cluster/cpu/maximum_utilization`
 *   `redis.googleapis.com/cluster/memory/average_utilization`
 *   `redis.googleapis.com/cluster/memory/maximum_utilization`
+*   `memorystore.googleapis.com/instance/cpu/average_utilization`
+*   `memorystore.googleapis.com/instance/cpu/maximum_utilization`
+*   `memorystore.googleapis.com/instance/memory/average_utilization`
+*   `memorystore.googleapis.com/instance/memory/maximum_utilization`
 
 By default, the following metrics will prevent scale-in operations if their
 value is greater than zero:
 
 *   `redis.googleapis.com/cluster/stats/average_expired_keys`
 *   `redis.googleapis.com/cluster/stats/maximum_expired_keys`
+*   `memorystore.googleapis.com/instance/stats/average_expired_keys`
+*   `memorystore.googleapis.com/instance/stats/maximum_expired_keys`
 
 Google recommends initially using the provided metrics and rules unchanged.
 However, in some cases you may want to define custom rules based on metrics in
