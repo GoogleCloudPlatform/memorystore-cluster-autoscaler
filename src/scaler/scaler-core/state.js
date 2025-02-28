@@ -31,6 +31,7 @@ const spanner = require('@google-cloud/spanner');
 const {logger} = require('../../autoscaler-common/logger');
 const assertDefined = require('../../autoscaler-common/assert-defined');
 const {memoize} = require('lodash');
+const {AutoscalerEngine} = require('../../autoscaler-common/types');
 
 /**
  * @typedef {import('../../autoscaler-common/types')
@@ -103,6 +104,7 @@ class State {
     this.projectId = cluster.projectId;
     this.regionId = cluster.regionId;
     this.clusterId = cluster.clusterId;
+    this.engine = cluster.engine;
   }
 
   /**
@@ -150,7 +152,17 @@ class State {
    * @return {string} full ID for this cluster
    */
   getClusterId() {
-    return `projects/${this.projectId}/regions/${this.regionId}/clusters/${this.clusterId}`;
+    const instanceIdPrefix = `projects/${this.projectId}/locations/${this.regionId}`;
+    switch (this.engine) {
+      case AutoscalerEngine.REDIS:
+        return `${instanceIdPrefix}/clusters/${this.clusterId}`;
+      case AutoscalerEngine.VALKEY:
+        return `${instanceIdPrefix}/instances/${this.clusterId}`;
+      default:
+        throw new Error(
+          `Unknown engine constructing ID for state store: ${this.engine}`,
+        );
+    }
   }
 }
 
