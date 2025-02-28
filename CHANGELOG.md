@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.1.0](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/compare/v2.0.1...v2.1.0) (2025-02-28)
+
+
+### Features
+
+* add Valkey support ([#71](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/issues/71)) ([4d3e76d](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/commit/4d3e76dbf0c0f1506530337b22b7439f38b99fcc))
+
+
+### Bug Fixes
+
+* bump jsonpath-plus from 10.2.0 to 10.3.0 ([#73](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/issues/73)) ([6ace5dc](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/commit/6ace5dca9ab70efa9fc3d931cab0e3a85d3b1506))
+* bump undici from 6.20.1 to 6.21.1 ([#75](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/issues/75)) ([070da15](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/commit/070da1542336cbca6cca86fd7d1b94f62436891e))
+* configure terminal as noninteractive ([#64](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/issues/64)) ([5a7b029](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/commit/5a7b0295e97a53231a9387d0adfd9c1bc10258fb))
+* **deps:** update npm-packages ([#59](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/issues/59)) ([654c8ce](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/commit/654c8ce9e03f27db7b9dc4fe47ee2e72e34e73c2))
+* **deps:** update terraform ([#60](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/issues/60)) ([72e6fa9](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/commit/72e6fa950ea559083fdd4c6d1187bd367d7ea4dd))
+
 ## [2.0.1](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/compare/v2.0.0...v2.0.1) (2024-12-23)
 
 
