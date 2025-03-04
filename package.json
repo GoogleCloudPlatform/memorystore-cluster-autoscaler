@@ -34,7 +34,7 @@
   },
   "dependencies": {
     "@google-cloud/firestore": "^7.11.0",
-    "@google-cloud/functions-framework": "^3.4.5",
+    "@google-cloud/functions-framework": "^3.4.6",
     "@google-cloud/memorystore": "^0.1.1",
     "@google-cloud/monitoring": "^4.1.0",
     "@google-cloud/opentelemetry-cloud-monitoring-exporter": "^0.20.0",
@@ -65,7 +65,7 @@
     "@types/lodash": "^4.17.16",
     "@types/lodash.unionby": "^4.8.9",
     "@types/mocha": "^10.0.10",
-    "@types/node": "^20.17.22",
+    "@types/node": "^20.17.23",
     "@types/rewire": "^2.5.30",
     "@types/sinon": "17.0.4",
     "eslint": "^8.57.1",
