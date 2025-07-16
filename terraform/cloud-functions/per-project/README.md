@@ -181,7 +181,7 @@ In this section you prepare your project for deployment.
     the following variable:
 
     ```sh
-    export TF_VAR_memorystore_engine=valkey
+    export TF_VAR_memorystore_engine=VALKEY
     ```
 
 7.  There are two options for deploying the state store for the Autoscaler:
