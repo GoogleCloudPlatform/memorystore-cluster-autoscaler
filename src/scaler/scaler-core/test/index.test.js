@@ -322,6 +322,134 @@ describe('#processScalingRequest', () => {
   });
 });
 
+describe('#clampForScaleInStepLimit', () => {
+  const app = rewire('../index.js');
+  const clampForScaleInStepLimit = app.__get__('clampForScaleInStepLimit');
+
+  it('should not clamp when scaling out', () => {
+    assert.equals(clampForScaleInStepLimit(5, 10), 10);
+  });
+
+  it('should not clamp when size is unchanged', () => {
+    assert.equals(clampForScaleInStepLimit(5, 5), 5);
+  });
+
+  it('should not clamp when scale-in is within 2/3 limit', () => {
+    // 9 -> 6: ceil(9/3) = 3, 6 >= 3
+    assert.equals(clampForScaleInStepLimit(9, 6), 6);
+  });
+
+  it('should clamp when scale-in exceeds 2/3 limit', () => {
+    // 23 -> 6: ceil(23/3) = 8, 6 < 8
+    assert.equals(clampForScaleInStepLimit(23, 6), 8);
+  });
+
+  it('should clamp to ceil(currentSize / 3)', () => {
+    // 10 -> 1: ceil(10/3) = 4
+    assert.equals(clampForScaleInStepLimit(10, 1), 4);
+  });
+
+  it('should handle exact 1/3 boundary', () => {
+    // 9 -> 3: ceil(9/3) = 3, 3 >= 3
+    assert.equals(clampForScaleInStepLimit(9, 3), 3);
+  });
+
+  it('should clamp below 1/3 boundary', () => {
+    // 9 -> 2: ceil(9/3) = 3, 2 < 3
+    assert.equals(clampForScaleInStepLimit(9, 2), 3);
+  });
+});
+
+describe('#processScalingRequest scale-in clamping', () => {
+  const app = rewire('../index.js');
+  const processScalingRequest = app.__get__('processScalingRequest');
+
+  const countersStub = {
+    incScalingSuccessCounter: sinon.stub(),
+    incScalingFailedCounter: sinon.stub(),
+    incScalingDeniedCounter: sinon.stub(),
+    recordScalingDuration: sinon.stub(),
+  };
+  const getSuggestedSizeStub = sinon.stub();
+  const withinCooldownPeriod = sinon.stub();
+  const stubScaleMemorystoreCluster = sinon.stub();
+  const readStateCheckOngoingLRO = sinon.stub();
+
+  beforeEach(() => {
+    stubScaleMemorystoreCluster.resolves();
+    app.__set__('scaleMemorystoreCluster', stubScaleMemorystoreCluster);
+    app.__set__('Counters', countersStub);
+    app.__set__('withinCooldownPeriod', withinCooldownPeriod.returns(false));
+    app.__set__('getSuggestedSize', getSuggestedSizeStub);
+    app.__set__('readStateCheckOngoingLRO', readStateCheckOngoingLRO);
+
+    readStateCheckOngoingLRO.returns(createStateData());
+  });
+
+  afterEach(() => {
+    Object.values(countersStub).forEach((stub) => stub.reset());
+    stubScaleMemorystoreCluster.reset();
+    getSuggestedSizeStub.reset();
+    withinCooldownPeriod.reset();
+  });
+
+  it('should clamp scale-in target when exceeding 2/3 reduction limit', async function () {
+    const cluster = createClusterParameters({currentSize: 23, minSize: 3});
+    const suggestedSize = 6;
+
+    getSuggestedSizeStub.returns(suggestedSize);
+    stubScaleMemorystoreCluster.returns('scalingOperationId');
+    const stateStub = createStubState();
+
+    await processScalingRequest(cluster, stateStub);
+
+    // ceil(23/3) = 8
+    const expectedClampedSize = 8;
+    assert.equals(stubScaleMemorystoreCluster.callCount, 1);
+    assert.equals(
+      stubScaleMemorystoreCluster.getCall(0).args[1],
+      expectedClampedSize,
+    );
+    sinon.assert.calledWith(stateStub.updateState, {
+      lastScalingTimestamp: stateStub.now,
+      createdOn: 0,
+      updatedOn: 0,
+      lastScalingCompleteTimestamp: null,
+      scalingOperationId: 'scalingOperationId',
+      scalingRequestedSize: expectedClampedSize,
+      scalingMethod: cluster.scalingMethod,
+      scalingPreviousSize: cluster.currentSize,
+    });
+  });
+
+  it('should not clamp scale-in target when within 2/3 limit', async function () {
+    const cluster = createClusterParameters({currentSize: 9, minSize: 3});
+    const suggestedSize = 6;
+
+    getSuggestedSizeStub.returns(suggestedSize);
+    stubScaleMemorystoreCluster.returns('scalingOperationId');
+    const stateStub = createStubState();
+
+    await processScalingRequest(cluster, stateStub);
+
+    assert.equals(stubScaleMemorystoreCluster.callCount, 1);
+    assert.equals(
+      stubScaleMemorystoreCluster.getCall(0).args[1],
+      suggestedSize,
+    );
+    sinon.assert.calledWith(stateStub.updateState, {
+      lastScalingTimestamp: stateStub.now,
+      createdOn: 0,
+      updatedOn: 0,
+      lastScalingCompleteTimestamp: null,
+      scalingOperationId: 'scalingOperationId',
+      scalingRequestedSize: suggestedSize,
+      scalingMethod: cluster.scalingMethod,
+      scalingPreviousSize: cluster.currentSize,
+    });
+  });
+});
+
 describe('#withinCooldownPeriod', () => {
   const app = rewire('../index.js');
   const withinCooldownPeriod = app.__get__('withinCooldownPeriod');

@@ -284,6 +284,22 @@ async function getSuggestedSize(cluster) {
 }
 
 /**
+ * Clamp the suggested size for scale-in to respect the Memorystore Cluster API
+ * constraint that prevents removing more than 2/3 of shards in a single operation.
+ *
+ * @param {number} currentSize
+ * @param {number} suggestedSize
+ * @return {number}
+ */
+function clampForScaleInStepLimit(currentSize, suggestedSize) {
+  if (suggestedSize >= currentSize) {
+    return suggestedSize;
+  }
+  const minAllowedSize = Math.ceil(currentSize / 3);
+  return Math.max(suggestedSize, minAllowedSize);
+}
+
+/**
  * Scale the specified cluster to the specified size
  *
  * The api returns an Operation object containing the LRO ID which is returned by this
@@ -390,10 +406,23 @@ async function processScalingRequest(cluster, autoscalerState) {
       return;
     }
 
+    const scalingTarget = clampForScaleInStepLimit(
+      cluster.currentSize,
+      suggestedSize,
+    );
+    if (scalingTarget !== suggestedSize) {
+      logger.info({
+        message: `----- ${cluster.projectId}/${cluster.regionId}/${cluster.clusterId}: Clamped scale-in target from ${suggestedSize} to ${scalingTarget} ${cluster.units} (cannot remove more than 2/3 of shards in a single operation)`,
+        projectId: cluster.projectId,
+        regionId: cluster.regionId,
+        clusterId: cluster.clusterId,
+      });
+    }
+
     if (
       !withinCooldownPeriod(
         cluster,
-        suggestedSize,
+        scalingTarget,
         savedState,
         autoscalerState.now,
       )
@@ -402,12 +431,12 @@ async function processScalingRequest(cluster, autoscalerState) {
       try {
         const operationId = await scaleMemorystoreCluster(
           cluster,
-          suggestedSize,
+          scalingTarget,
         );
         await autoscalerState.updateState({
           ...savedState,
           scalingOperationId: operationId,
-          scalingRequestedSize: suggestedSize,
+          scalingRequestedSize: scalingTarget,
           lastScalingTimestamp: autoscalerState.now,
           lastScalingCompleteTimestamp: null,
           scalingPreviousSize: cluster.currentSize,
@@ -424,9 +453,9 @@ async function processScalingRequest(cluster, autoscalerState) {
           err: err,
         });
         eventType = 'SCALING_FAILURE';
-        await Counters.incScalingFailedCounter(cluster, suggestedSize);
+        await Counters.incScalingFailedCounter(cluster, scalingTarget);
       }
-      await publishDownstreamEvent(eventType, cluster, suggestedSize);
+      await publishDownstreamEvent(eventType, cluster, scalingTarget);
     } else {
       logger.info({
         message: `----- ${cluster.projectId}/${cluster.regionId}/${cluster.clusterId}: has ${cluster.currentSize} ${cluster.units}, no scaling possible - within cooldown period`,
@@ -437,7 +466,7 @@ async function processScalingRequest(cluster, autoscalerState) {
       });
       await Counters.incScalingDeniedCounter(
         cluster,
-        suggestedSize,
+        scalingTarget,
         'WITHIN_COOLDOWN',
       );
     }
