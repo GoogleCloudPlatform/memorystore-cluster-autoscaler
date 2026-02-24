@@ -15,7 +15,8 @@
 # Docker compose set of services to locally run the tests sequentially using
 # Node 20, 22, 24 LTS versions.
 #
-# Usage: docker compose  --file=./docker-compose.test.yaml up
+# Usage:
+# UIDGID="$(id -u):$(id -g)" docker compose  --file=./docker-compose.test.yaml up
 
 services:
   node_20_tests:
@@ -52,4 +53,18 @@ services:
       - .:/app
     depends_on:
       node_22_tests:
+        condition: service_completed_successfully
+
+  cleanup:
+    container_name: cleanup
+    image: node:24.13-slim
+    working_dir: /app
+    entrypoint: ["/bin/bash", "-e", "-x", "-c"]
+    command:
+      # Node modules will be owned by root, so delete
+      - "rm -fr ./node_modules ./coverage"
+    volumes:
+      - .:/app
+    depends_on:
+      node_24_tests:
         condition: service_completed_successfully

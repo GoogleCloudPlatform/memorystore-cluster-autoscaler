@@ -26,5 +26,6 @@ test/
 *release-please*
 *.md
 configeditor/
+coverage
 
 #!include:.gitignore
