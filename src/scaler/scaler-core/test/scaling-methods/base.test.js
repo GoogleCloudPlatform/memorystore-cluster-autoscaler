@@ -410,7 +410,11 @@ describe('#ensureMinFreeMemory', () => {
 const ensureValidClusterSize = app.__get__('ensureValidClusterSize');
 describe('#ensureValidClusterSize', () => {
   it('should clamp cluster size at configured maximum', () => {
-    const cluster = createClusterParameters({minSize: 10, maxSize: 20});
+    const cluster = createClusterParameters({
+      minSize: 10,
+      maxSize: 20,
+      currentSize: 10,
+    });
     const clampedSize = ensureValidClusterSize(
       cluster,
       21,
@@ -420,7 +424,11 @@ describe('#ensureValidClusterSize', () => {
   });
 
   it('should clamp cluster size at configured minimum', () => {
-    const cluster = createClusterParameters({minSize: 10, maxSize: 20});
+    const cluster = createClusterParameters({
+      minSize: 10,
+      maxSize: 20,
+      currentSize: 20,
+    });
     const clampedSize = ensureValidClusterSize(
       cluster,
       9,
@@ -430,7 +438,11 @@ describe('#ensureValidClusterSize', () => {
   });
 
   it('should not clamp when cluster size is within configured range', () => {
-    const cluster = createClusterParameters({minSize: 10, maxSize: 20});
+    const cluster = createClusterParameters({
+      minSize: 10,
+      maxSize: 20,
+      currentSize: 5,
+    });
     const clampedSize = ensureValidClusterSize(
       cluster,
       15,
@@ -440,12 +452,32 @@ describe('#ensureValidClusterSize', () => {
   });
 
   it('should prevent scale in below minimum supported cluster size', () => {
-    const cluster = createClusterParameters({minSize: 1, maxSize: 10});
+    const cluster = createClusterParameters({
+      minSize: 1,
+      maxSize: 10,
+      currentSize: 3,
+    });
     const clampedSize = ensureValidClusterSize(
       cluster,
       0,
       AutoscalerDirection.IN,
     );
     clampedSize.should.equal(1);
+  });
+
+  it('should not scale in by more than 2/3 of current shards', () => {
+    const cluster = createClusterParameters({
+      minSize: 3,
+      maxSize: 100,
+      currentSize: 23,
+    });
+    const clampedSize = ensureValidClusterSize(
+      cluster,
+      5,
+      AutoscalerDirection.IN,
+    );
+
+    // ceil(23 / 3) = 8.
+    clampedSize.should.equal(8);
   });
 });

@@ -281,7 +281,9 @@ describe('#linear', () => {
 
     it(`scales IN directly to minSize when metric is 0`, async () => {
       const cluster = createClusterParameters({
-        currentSize: 100,
+        // take into account 1/3rd scale in limit.
+        currentSize: 14,
+        maxSize: 100,
         minSize: 5,
         metrics: [
           {

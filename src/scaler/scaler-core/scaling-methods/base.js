@@ -313,6 +313,20 @@ function ensureValidClusterSize(cluster, suggestedSize, scalingDirection) {
     size = cluster.minSize;
   }
 
+  if (scalingDirection === AutoscalerDirection.IN) {
+    // Prevent scale-in to less than 1/3 of current size.
+    const oneThirdCurrentSize = Math.ceil(cluster.currentSize * (1 / 3));
+    if (size < oneThirdCurrentSize) {
+      logger.debug({
+        message: `\tClamping the suggested size of ${size} ${cluster.units} to maintain at least 1/3 of current size: ${oneThirdCurrentSize} ${cluster.units}`,
+        projectId: cluster.projectId,
+        regionId: cluster.regionId,
+        clusterId: cluster.clusterId,
+      });
+      size = oneThirdCurrentSize;
+    }
+  }
+
   /*
    * Check for a cluster size that is too small to prevent an invalid scaling operation.
    * A check for a cluster size that is too large is not included here because this is
