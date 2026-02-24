@@ -23,11 +23,11 @@
 
 ## Table of Contents
 
-*   [Table of Contents](#table-of-contents)
-*   [Overview](#overview)
-*   [Architecture](#architecture)
-*   [Configuration parameters](#configuration-parameters)
-    *   [Required](#required)
+- [Table of Contents](#table-of-contents)
+- [Overview](#overview)
+- [Architecture](#architecture)
+- [Configuration parameters](#configuration-parameters)
+  - [Required](#required)
 
 ## Overview
 
@@ -56,7 +56,7 @@ The Memorystore Cluster instances reside in a given application project.
     the [main architecture section](../../terraform/cloud-functions/README.md#architecture).
 
 It is important to note that Autoscaler infrastructure is now distributed across
-several projects. *The core components reside in the Autoscaler project* An
+several projects. _The core components reside in the Autoscaler project_ An
 instance of Cloud Scheduler, the Forwarder topic and the Forwarder Function
 reside in each of the application projects.
 
@@ -67,6 +67,6 @@ variable `POLLER_TOPIC`.
 
 ### Required
 
-| Key            | Description |
+| Key            | Description                                 |
 | -------------- | ------------------------------------------- |
 | `POLLER_TOPIC` | PubSub topic the Poller function listens on |

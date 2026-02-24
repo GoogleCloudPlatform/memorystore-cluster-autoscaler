@@ -23,15 +23,15 @@
 
 ## Table of Contents
 
-*   [Table of Contents](#table-of-contents)
-*   [Overview](#overview)
-*   [Scaling parameters](#scaling-parameters)
-*   [Scaling profiles](#scaling-profiles)
-*   [Scaling rules](#scaling-rules)
-*   [Scaling methods](#scaling-methods)
-*   [Scaling adjustments](#scaling-adjustments)
-*   [Downstream messaging](#downstream-messaging)
-*   [Troubleshooting](#troubleshooting)
+- [Table of Contents](#table-of-contents)
+- [Overview](#overview)
+- [Scaling parameters](#scaling-parameters)
+- [Scaling profiles](#scaling-profiles)
+- [Scaling rules](#scaling-rules)
+- [Scaling methods](#scaling-methods)
+- [Scaling adjustments](#scaling-adjustments)
+- [Downstream messaging](#downstream-messaging)
+- [Troubleshooting](#troubleshooting)
 
 ## Overview
 
@@ -122,10 +122,10 @@ A scaling profile consists of a combination of scaling rules that,
 when grouped together, define the metrics that will be evaluated to reach
 a scaling decsion. One of the following scaling profiles may be provided:
 
-*   `CPU`
-*   `MEMORY`
-*   `CPU_AND_MEMORY` (default, used if no other profile is specified)
-*   `CUSTOM` (see section [custom-scaling](#custom-scaling)
+- `CPU`
+- `MEMORY`
+- `CPU_AND_MEMORY` (default, used if no other profile is specified)
+- `CUSTOM` (see section [custom-scaling](#custom-scaling)
 
 The `CPU_AND_MEMORY` profile includes rules for scaling on CPU as well as memory
 utilization. Please see the following section for more details on how these
@@ -214,12 +214,13 @@ of these evaluations are combined to form a scaling decision, which may
 be `IN`, `OUT`, or `NONE`.
 
 The rules are represented as JavaScript Objects within the Autoscaler
-codebase, and can be found [here](./scaler-core/scaling-profiles/rules/README.md).
+codebase, and can be found
+[in the rules subdirectory](./scaler-core/scaling-profiles/rules/README.md).
 
 The rules are grouped into the following categories:
 
-*   [CPU Utilization](./scaler-core/scaling-profiles/rules/cpu/README.md)
-*   [Memory Utilization](./scaler-core/scaling-profiles/rules/memory/README.md)
+- [CPU Utilization](./scaler-core/scaling-profiles/rules/cpu/README.md)
+- [Memory Utilization](./scaler-core/scaling-profiles/rules/memory/README.md)
 
 The following is an annotated example of one of the included rules. This
 rule triggers a scale-out if the average CPU utilization (i.e. across all
@@ -260,27 +261,27 @@ Autoscaler. Thorough testing is recommended.
 
 The Scaler component supports two scaling methods out of the box:
 
-*   [STEPWISE](scaler-core/scaling-methods/stepwise.js): This is the default
-    method used by the Scaler. It suggests adding or removing shards
-    using a fixed step amount defined by the parameter `stepSize`.
+- [STEPWISE](scaler-core/scaling-methods/stepwise.js): This is the default
+  method used by the Scaler. It suggests adding or removing shards
+  using a fixed step amount defined by the parameter `stepSize`.
 
-*   [DIRECT](scaler-core/scaling-methods/direct.js): This method suggests
-    scaling to the number of shards specified by the `maxSize` parameter. It
-    does NOT take in account the current utilization metrics. It is useful
-    to scale an instance in preparation for a batch job and and to scale
-    it back after the job is finished.
+- [DIRECT](scaler-core/scaling-methods/direct.js): This method suggests
+  scaling to the number of shards specified by the `maxSize` parameter. It
+  does NOT take in account the current utilization metrics. It is useful
+  to scale an instance in preparation for a batch job and and to scale
+  it back after the job is finished.
 
-*   [LINEAR](scaler-core/scaling-methods/linear.js): This method suggests
-    scaling to the number of shards calculated with a simple linear
-    cross-multiplication between the threshold metric and its current
-    utilization. In other words, the new number of shards divided by the current
-    number of shards is equal to the scaling metric value divided by the scaling
-    metric threshold value. Using this method, the new number of shards or
-    processing units is [directly proportional][directly-proportional] to the
-    current resource utilization and the threshold. The proposed change size can
-    be limited using `scaleInLimit` and `scaleOutLimit`, where the variation
-    in the shard count in a single iteration will not exceed by these limits
-    when scaling in or out respectively.
+- [LINEAR](scaler-core/scaling-methods/linear.js): This method suggests
+  scaling to the number of shards calculated with a simple linear
+  cross-multiplication between the threshold metric and its current
+  utilization. In other words, the new number of shards divided by the current
+  number of shards is equal to the scaling metric value divided by the scaling
+  metric threshold value. Using this method, the new number of shards or
+  processing units is [directly proportional][directly-proportional] to the
+  current resource utilization and the threshold. The proposed change size can
+  be limited using `scaleInLimit` and `scaleOutLimit`, where the variation
+  in the shard count in a single iteration will not exceed by these limits
+  when scaling in or out respectively.
 
 The selected scaling method will produce a suggested size to which the
 cluster should be scaled. This suggested size then undergoes some final checks
@@ -345,23 +346,23 @@ The following is an example of a message published by the Autoscaler.
 
 Notable attributes are:
 
-*   **message.attributes.event:** the name of the event for which this message
-    was triggered. The Autoscaler publishes a message when it scales a
-    Memorystore cluster. The name of that event is `'SCALING'`. You can define
-    [custom messages](#custom-messages) for your own event types.
-*   **message.attributes.googclient_schemaname:** the
-    [Pub/Sub schema][pub-sub-schema] defining the format that the data field
-    must follow. The schema represents the contract between the message
-    producer (Autoscaler) and the message consumers (downstream applications).
-    Pub/Sub enforces the format. The default schema is defined as a Protocol
-    Buffer in the file
-    [downstream.schema.proto](scaler-core/downstream.schema.proto).
-*   **message.attributes.googclient_schemaencoding:** consumers will receive
-    the data in the messages encoded as Base64 containing JSON.
-*   **message.publishTime:** timestamp when the message was published
-*   **message.data:** the message payload encoded as Base64 containing a JSON
-    string. In the example, the [decoded][base-64-decode] string contains the
-    following data:
+- **message.attributes.event:** the name of the event for which this message
+  was triggered. The Autoscaler publishes a message when it scales a
+  Memorystore cluster. The name of that event is `'SCALING'`. You can define
+  [custom messages](#custom-messages) for your own event types.
+- **message.attributes.googclient_schemaname:** the
+  [Pub/Sub schema][pub-sub-schema] defining the format that the data field
+  must follow. The schema represents the contract between the message
+  producer (Autoscaler) and the message consumers (downstream applications).
+  Pub/Sub enforces the format. The default schema is defined as a Protocol
+  Buffer in the file
+  [downstream.schema.proto](scaler-core/downstream.schema.proto).
+- **message.attributes.googclient_schemaencoding:** consumers will receive
+  the data in the messages encoded as Base64 containing JSON.
+- **message.publishTime:** timestamp when the message was published
+- **message.data:** the message payload encoded as Base64 containing a JSON
+  string. In the example, the [decoded][base-64-decode] string contains the
+  following data:
 
 ```json
 {
@@ -415,11 +416,11 @@ section explains how to define one, which implies modifying the Scaler code.
 
 To publish a new event as a downstream message:
 
-*   Choose a unique name for your event. The convention is an all-caps
-    alphanumeric + underscores ID with a verb. e.g. `'SCALING'`
-*   Call the Scaler function `publishDownstreamEvent`.
-    For an example, look at the [Scaler](scaler-core/index.js)
-    function `processScalingRequest`.
+- Choose a unique name for your event. The convention is an all-caps
+  alphanumeric + underscores ID with a verb. e.g. `'SCALING'`
+- Call the Scaler function `publishDownstreamEvent`.
+  For an example, look at the [Scaler](scaler-core/index.js)
+  function `processScalingRequest`.
 
 In case you need to add fields to the message payload:
 
@@ -456,15 +457,15 @@ Unable to retrieve metrics for projects/[PROJECT_ID]/us-central1/[MEMORYSTORE_IN
 Error: 7 PERMISSION_DENIED: Permission monitoring.timeSeries.list denied (or the resource may not exist).
 ```
 
-*   Service account is missing permissions
-    *   `poller-sa@{PROJECT_ID}.gserviceaccount.com` for Cloud Run functions, or
-    *   `scaler-sa@{PROJECT_ID}.gserviceaccount.com` for Kubernetes deployment requires
-        *   `redis.clusters.list`,
-        *   `redis.clusters.get`,
-        *   `monitoring.timeSeries.list`
-*   [GKE Workload Identity](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity)
-    is not correctly configured
-*   Incorrectly configured Memorystore cluster ID
+- Service account is missing permissions
+  - `poller-sa@{PROJECT_ID}.gserviceaccount.com` for Cloud Run functions, or
+  - `scaler-sa@{PROJECT_ID}.gserviceaccount.com` for Kubernetes deployment requires
+    - `redis.clusters.list`,
+    - `redis.clusters.get`,
+    - `monitoring.timeSeries.list`
+- [GKE Workload Identity](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity)
+  is not correctly configured
+- Incorrectly configured Memorystore cluster ID
 
 ### Scaler cannot access state database
 
@@ -477,11 +478,11 @@ Error: 7 PERMISSION_DENIED:
 Caller is missing IAM permission spanner.sessions.create on resource projects/[PROJECT_ID]/instances/[SPANNER_STATE_INSTANCE]/databases/memorystore-autoscaler-state.
 ```
 
-*   Scaler service account is missing permissions to Spanner or Firestore.
-    *   `scaler-sa@{PROJECT_ID}.gserviceaccount.com`
-*   Incorrect Spanner or Firestore details in configuration file.
-*   [GKE Workload Identity](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity)
-    is not correctly configured.
+- Scaler service account is missing permissions to Spanner or Firestore.
+  - `scaler-sa@{PROJECT_ID}.gserviceaccount.com`
+- Incorrect Spanner or Firestore details in configuration file.
+- [GKE Workload Identity](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity)
+  is not correctly configured.
 
 ### Spanner state store results in an error
 
@@ -491,7 +492,7 @@ For example:
 Error: 5 NOT_FOUND: Database not found: projects/[PROJECT_ID]/instances/[SPANNER_STATE_INSTANCE]/databases/memorystore-autoscaler-state
 ```
 
-*   State database is missing from Spanner state instance.
+- State database is missing from Spanner state instance.
 
 ### Scaler cannot scale Memorystore instance(s)
 
@@ -500,27 +501,27 @@ Unsuccessful scaling attempt: Error: 7 PERMISSION_DENIED:
 Permission 'redis.clusters.update' denied on 'projects/[PROJECT_ID]/locations/us-central1/clusters/[MEMORYSTORE_INSTANCE_ID]'.
 ```
 
-*   Scaler service account is missing `redis.clusters.update` permissions to
-    Memorystore.
-    *   `scaler-sa@{PROJECT_ID}.gserviceaccount.com`
-*   Incorrect Memorystore instance specified in configuration file.
-*   [GKE Workload Identity](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity)
-    is not correctly configured
+- Scaler service account is missing `redis.clusters.update` permissions to
+  Memorystore.
+  - `scaler-sa@{PROJECT_ID}.gserviceaccount.com`
+- Incorrect Memorystore instance specified in configuration file.
+- [GKE Workload Identity](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity)
+  is not correctly configured
 
 ### Latency Spikes when Scaling in
 
-*   The amount of compute capacity removed from the instance might be too large.
-    *   Use the `scaleInLimit` parameter.
-    *   Increase the `scaleInCoolingMinutes.`
-    *   Set a larger `minSize` for the instance.
+- The amount of compute capacity removed from the instance might be too large.
+  - Use the `scaleInLimit` parameter.
+  - Increase the `scaleInCoolingMinutes.`
+  - Set a larger `minSize` for the instance.
 
 See the documentation on the [Poller parameters][autoscaler-poller-parameters]
 for further details.
 
 ### Autoscaler is too reactive or not reactive enough
 
-*   The "sweet spot" between thresholds is too narrow or too wide.
-    *   Adjust the `thresholds` for the scaling profile.
+- The "sweet spot" between thresholds is too narrow or too wide.
+  - Adjust the `thresholds` for the scaling profile.
 
 <!-- LINKS: https://www.markdownguide.org/basic-syntax/#reference-style-links -->
 

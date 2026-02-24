@@ -17,20 +17,20 @@
 
 ## Table of Contents
 
-*   [Table of Contents](#table-of-contents)
-*   [Overview](#overview)
+- [Table of Contents](#table-of-contents)
+- [Overview](#overview)
 
 ## Overview
 
 This directory contains the source code for the two main components of the
 autoscaler: the Poller and the Scaler:
 
-*   [Poller](poller/README.md)
-*   [Scaler](scaler/README.md)
+- [Poller](poller/README.md)
+- [Scaler](scaler/README.md)
 
 As well as the Forwarder, which is used in the
 [distributed deployment model][distributed-docs]:
 
-*   [Forwarder](forwarder/README.md)
+- [Forwarder](forwarder/README.md)
 
 [distributed-docs]: ../terraform/cloud-functions/distributed/README.md

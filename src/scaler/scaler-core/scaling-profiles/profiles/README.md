@@ -8,6 +8,6 @@
 
 This directory contains profiles for scaling based on:
 
-*   [CPU utilization](./cpu.js)
-*   [Memory utilization](./memory.js)
-*   [CPU and Memory utilization](./cpu_and_memory.js)
+- [CPU utilization](./cpu.js)
+- [Memory utilization](./memory.js)
+- [CPU and Memory utilization](./cpu_and_memory.js)

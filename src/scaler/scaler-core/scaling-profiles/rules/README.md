@@ -8,5 +8,5 @@
 
 This directory contains rules for scaling based on:
 
-*   [CPU utilization](./cpu/README.md)
-*   [Memory utilization](./memory/README.md)
+- [CPU utilization](./cpu/README.md)
+- [Memory utilization](./memory/README.md)

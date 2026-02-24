@@ -36,19 +36,19 @@
 
 ## Table of Contents
 
-*   [Table of Contents](#table-of-contents)
-*   [Overview](#overview)
-*   [Architecture](#architecture)
-    *   [Pros](#pros)
-    *   [Cons](#cons)
-*   [Before you begin](#before-you-begin)
-*   [Preparing the Autoscaler Project](#preparing-the-autoscaler-project)
-    *   [Using Firestore for Autoscaler state](#using-firestore-for-autoscaler-state)
-    *   [Using Spanner for Autoscaler state](#using-spanner-for-autoscaler-state)
-*   [Deploying the Autoscaler](#deploying-the-autoscaler)
-*   [Connecting to the test VM](#connecting-to-the-test-vm)
-*   [Importing your Memorystore Cluster instances](#importing-your-memorystore-cluster-instances)
-*   [Next steps](#next-steps)
+- [Table of Contents](#table-of-contents)
+- [Overview](#overview)
+- [Architecture](#architecture)
+  - [Pros](#pros)
+  - [Cons](#cons)
+- [Before you begin](#before-you-begin)
+- [Preparing the Autoscaler Project](#preparing-the-autoscaler-project)
+  - [Using Firestore for Autoscaler state](#using-firestore-for-autoscaler-state)
+  - [Using Spanner for Autoscaler state](#using-spanner-for-autoscaler-state)
+- [Deploying the Autoscaler](#deploying-the-autoscaler)
+- [Connecting to the test VM](#connecting-to-the-test-vm)
+- [Importing your Memorystore Cluster instances](#importing-your-memorystore-cluster-instances)
+- [Next steps](#next-steps)
 
 ## Overview
 
@@ -74,22 +74,22 @@ The per-project deployment has the following pros and cons:
 
 ### Pros
 
-*   **Design**: This option has the simplest design.
-*   **Configuration**: The control over scheduler parameters belongs to the team
-    that owns the Memorystore clusters, therefore the team has the highest
-    degree of freedom to adapt the Autoscaler to its needs.
-*   **Infrastructure**: This design establishes a clear boundary of
-    responsibility and security over the Autoscaler infrastructure because the
-    team that owns the Memorystore clusters is also the owner of the Autoscaler
-    infrastructure.
+- **Design**: This option has the simplest design.
+- **Configuration**: The control over scheduler parameters belongs to the team
+  that owns the Memorystore clusters, therefore the team has the highest
+  degree of freedom to adapt the Autoscaler to its needs.
+- **Infrastructure**: This design establishes a clear boundary of
+  responsibility and security over the Autoscaler infrastructure because the
+  team that owns the Memorystore clusters is also the owner of the Autoscaler
+  infrastructure.
 
 ### Cons
 
-*   **Maintenance**: With each team being responsible for the Autoscaler
-    configuration and infrastructure it may become difficult to make sure that
-    all Autoscalers across the organization follow the same update guidelines.
-*   **Audit**: Because of the high level of control by each team, a centralized
-    audit may become more complex.
+- **Maintenance**: With each team being responsible for the Autoscaler
+  configuration and infrastructure it may become difficult to make sure that
+  all Autoscalers across the organization follow the same update guidelines.
+- **Audit**: Because of the high level of control by each team, a centralized
+  audit may become more complex.
 
 ## Before you begin
 
@@ -171,7 +171,6 @@ In this section you prepare your project for deployment.
     ```
 
 6.  The Autoscaler is capable of scaling two types of Memorystore clusters:
-
     1.  [Memorystore for Redis Cluster][memorystore-for-redis-cluster]
     2.  [Memorystore for Valkey][memorystore-for-valkey]
 
@@ -185,7 +184,6 @@ In this section you prepare your project for deployment.
     ```
 
 7.  There are two options for deploying the state store for the Autoscaler:
-
     1.  Store the state in [Firestore][cloud-firestore]
     2.  Store the state in [Spanner][cloud-spanner]
 
@@ -311,10 +309,10 @@ In this section you prepare your project for deployment.
     terraform apply -parallelism=2
     ```
 
-    *   If you are running this command in Cloud Shell and encounter errors of
-        the form "`Error: cannot assign requested address`", this is a [known
-        issue][provider-issue] in the Terraform Google provider, please retry
-        the command above and include the flag `-parallelism=1`.
+    - If you are running this command in Cloud Shell and encounter errors of
+      the form "`Error: cannot assign requested address`", this is a [known
+      issue][provider-issue] in the Terraform Google provider, please retry
+      the command above and include the flag `-parallelism=1`.
 
 ## Connecting to the Test VM
 

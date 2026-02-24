@@ -46,6 +46,10 @@ module.exports = {
       options: shared,
     },
     {
+      files: '*.md',
+      options: shared,
+    },
+    {
       /** Sass-specific configuration. */
       files: '*.scss',
       options: {

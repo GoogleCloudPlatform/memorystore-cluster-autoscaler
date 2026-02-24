@@ -28,22 +28,22 @@
 
 ## Table of Contents
 
-*   [Table of Contents](#table-of-contents)
-*   [Overview](#overview)
-*   [Architecture](#architecture)
-    *   [Pros](#pros)
-    *   [Cons](#cons)
-*   [Before you begin](#before-you-begin)
-*   [Preparing the Autoscaler Project](#preparing-the-autoscaler-project)
-    *   [Using Firestore for Autoscaler state](#using-firestore-for-autoscaler-state)
-    *   [Using Spanner for Autoscaler state](#using-spanner-for-autoscaler-state)
-*   [Creating Autoscaler infrastructure](#creating-autoscaler-infrastructure)
-*   [Building the Autoscaler](#building-the-autoscaler)
-*   [Deploying the Autoscaler](#deploying-the-autoscaler)
-*   [Connecting to the test VM](#connecting-to-the-test-vm)
-*   [Metrics in GKE deployment](#metrics-in-gke-deployment)
-*   [Importing your Memorystore Cluster instances](#importing-your-memorystore-cluster-instances)
-*   [Troubleshooting](#troubleshooting)
+- [Table of Contents](#table-of-contents)
+- [Overview](#overview)
+- [Architecture](#architecture)
+  - [Pros](#pros)
+  - [Cons](#cons)
+- [Before you begin](#before-you-begin)
+- [Preparing the Autoscaler Project](#preparing-the-autoscaler-project)
+  - [Using Firestore for Autoscaler state](#using-firestore-for-autoscaler-state)
+  - [Using Spanner for Autoscaler state](#using-spanner-for-autoscaler-state)
+- [Creating Autoscaler infrastructure](#creating-autoscaler-infrastructure)
+- [Building the Autoscaler](#building-the-autoscaler)
+- [Deploying the Autoscaler](#deploying-the-autoscaler)
+- [Connecting to the test VM](#connecting-to-the-test-vm)
+- [Metrics in GKE deployment](#metrics-in-gke-deployment)
+- [Importing your Memorystore Cluster instances](#importing-your-memorystore-cluster-instances)
+- [Troubleshooting](#troubleshooting)
 
 ## Overview
 
@@ -99,25 +99,25 @@ The GKE deployment has the following pros and cons:
 
 ### Pros
 
-*   **Kubernetes-based**: For teams that may not be able to use Google Cloud
-    services such as [Cloud Run functions][cloud-functions], this design enables
-    the use of the Autoscaler.
-*   **Configuration**: The control over scheduler parameters belongs to the team
-    that owns the Memorystore Cluster instance, therefore the team has the
-    highest degree of freedom to adapt the Autoscaler to its needs.
-*   **Infrastructure**: This design establishes a clear boundary of
-    responsibility and security over the Autoscaler infrastructure because the
-    Autoscaler infrastructure.
+- **Kubernetes-based**: For teams that may not be able to use Google Cloud
+  services such as [Cloud Run functions][cloud-functions], this design enables
+  the use of the Autoscaler.
+- **Configuration**: The control over scheduler parameters belongs to the team
+  that owns the Memorystore Cluster instance, therefore the team has the
+  highest degree of freedom to adapt the Autoscaler to its needs.
+- **Infrastructure**: This design establishes a clear boundary of
+  responsibility and security over the Autoscaler infrastructure because the
+  Autoscaler infrastructure.
 
 ### Cons
 
-*   **Infrastructure**: In contrast to the [Cloud Run functions][cloud-functions]
-    design, some long-lived infrastructure and services are required.
-*   **Maintenance**: with each team being responsible for the Autoscaler
-    configuration and infrastructure it may become difficult to make sure that
-    all Autoscalers across the company follow the same update guidelines.
-*   **Audit**: because of the high level of control by each team, a centralized
-    audit may become more complex.
+- **Infrastructure**: In contrast to the [Cloud Run functions][cloud-functions]
+  design, some long-lived infrastructure and services are required.
+- **Maintenance**: with each team being responsible for the Autoscaler
+  configuration and infrastructure it may become difficult to make sure that
+  all Autoscalers across the company follow the same update guidelines.
+- **Audit**: because of the high level of control by each team, a centralized
+  audit may become more complex.
 
 The Poller and Scaler components are be deployed as a single pod, which runs
 as a Kubernetes cron job. This means there are no long-running components.
@@ -197,7 +197,6 @@ In this section you prepare your project for deployment.
     ```
 
 6.  The Autoscaler is capable of scaling two types of Memorystore clusters:
-
     1.  [Memorystore for Redis Cluster][memorystore-for-redis-cluster]
     2.  [Memorystore for Valkey][memorystore-for-valkey]
 
@@ -211,7 +210,6 @@ In this section you prepare your project for deployment.
     ```
 
 7.  There are two options for deploying the state store for the Autoscaler:
-
     1.  Store the state in [Firestore][cloud-firestore]
     2.  Store the state in [Spanner][spanner]
 
@@ -448,17 +446,17 @@ with `-parallelism=1`.
     configuration file accordingly.
 
 7.  To configure the Autoscaler and begin scaling operations, run the following
-     command:
+    command:
 
-     ```sh
-     kubectl apply -f autoscaler-config/
-     ```
+    ```sh
+    kubectl apply -f autoscaler-config/
+    ```
 
 8.  Any changes made to the configuration files and applied with `kubectl
-     apply` will update the Autoscaler configuration.
+apply` will update the Autoscaler configuration.
 
 9.  You can view logs for the Autoscaler components via `kubectl` or the [Cloud
-     Logging][cloud-console-logging] interface in the Google Cloud console.
+    Logging][cloud-console-logging] interface in the Google Cloud console.
 
 ## Connecting to the Test VM
 
@@ -679,6 +677,7 @@ following the instructions above.
     ```
 
 <!-- LINKS: https://www.markdownguide.org/basic-syntax/#reference-style-links -->
+
 [architecture-gke-unified]: ../../resources/architecture-gke-unified.png
 [autoscaler-config-params]: ../../src/poller/README.md#configuration-parameters
 [autoscaler-poller]: ../../src/poller/README.md

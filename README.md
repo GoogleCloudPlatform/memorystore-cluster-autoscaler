@@ -22,13 +22,13 @@
 
 ## Table of Contents
 
-*   [Table of Contents](#table-of-contents)
-*   [Overview](#overview)
-*   [Architecture](#architecture)
-*   [Deployment](#deployment)
-*   [Configuration](#configuration)
-*   [Licensing](#licensing)
-*   [Contributing](#contributing)
+- [Table of Contents](#table-of-contents)
+- [Overview](#overview)
+- [Architecture](#architecture)
+- [Deployment](#deployment)
+- [Configuration](#configuration)
+- [Licensing](#licensing)
+- [Contributing](#contributing)
 
 ## Overview
 
@@ -55,8 +55,8 @@ The diagram above shows the high level components of the Autoscaler and the
 interaction flow:
 
 1.  The Autoscaler consists of two main decoupled components:
-    *   [The Poller component][autoscaler-poller]
-    *   [The Scaler component][autoscaler-scaler]
+    - [The Poller component][autoscaler-poller]
+    - [The Scaler component][autoscaler-scaler]
 
     These can be deployed to [Cloud Run functions][cloud-functions] and configured
     so that the Autoscaler runs according to a user-defined schedule.
@@ -86,8 +86,8 @@ tracking and auditing.
 To deploy the Autoscaler, decide which of the following strategies
 is best adjusted to fulfill your technical and operational needs:
 
-*   [Deployment to Cloud Run functions](terraform/cloud-functions/README.md)
-*   [Deployment to Google Kubernetes Engine (GKE)](terraform/gke/README.md)
+- [Deployment to Cloud Run functions](terraform/cloud-functions/README.md)
+- [Deployment to Google Kubernetes Engine (GKE)](terraform/gke/README.md)
 
 In both of the above cases, the Google Cloud Platform resources are
 deployed using Terraform. Please see the [Terraform instructions](terraform/README.md)
@@ -145,8 +145,8 @@ Please note that this is not an officially supported Google product.
 
 ## Contributing
 
-*   [Contributing guidelines][contributing-guidelines]
-*   [Code of conduct][code-of-conduct]
+- [Contributing guidelines][contributing-guidelines]
+- [Code of conduct][code-of-conduct]
 
 <!-- LINKS: https://www.markdownguide.org/basic-syntax/#reference-style-links -->
 

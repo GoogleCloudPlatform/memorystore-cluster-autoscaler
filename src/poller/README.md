@@ -23,20 +23,20 @@
 
 ## Table of Contents
 
-*   [Table of Contents](#table-of-contents)
-*   [Overview](#overview)
-*   [Configuration parameters](#configuration-parameters)
-    *   [Required](#required)
-    *   [Optional](#optional)
-*   [Metrics](#metrics)
-*   [Custom metrics](#custom-metrics)
-*   [Metrics parameters](#metrics-parameters)
-    *   [Selectors](#selectors)
-    *   [Parameters](#parameters)
-    *   [Example](#example)
-*   [State Database](#state-database)
-*   [Example JSON configuration for Cloud Run functions](#example-json-configuration-for-cloud-run-functions)
-*   [Example YAML ConfigMap for Kubernetes deployment](#example-yaml-configmap-for-kubernetes-deployment)
+- [Table of Contents](#table-of-contents)
+- [Overview](#overview)
+- [Configuration parameters](#configuration-parameters)
+  - [Required](#required)
+  - [Optional](#optional)
+- [Metrics](#metrics)
+- [Custom metrics](#custom-metrics)
+- [Metrics parameters](#metrics-parameters)
+  - [Selectors](#selectors)
+  - [Parameters](#parameters)
+  - [Example](#example)
+- [State Database](#state-database)
+- [Example JSON configuration for Cloud Run functions](#example-json-configuration-for-cloud-run-functions)
+- [Example YAML ConfigMap for Kubernetes deployment](#example-yaml-configmap-for-kubernetes-deployment)
 
 ## Overview
 
@@ -84,39 +84,39 @@ npm run validate-config-file -- path/to/config_file
 
 ### Required
 
-| Key                 | Description |
-| ------------------- | ----------- |
-| `projectId`         | Project ID of the Memorystore Cluster to be monitored by the Autoscaler |
-| `regionId`          | Region ID of the Memorystore Cluster to be monitored by the Autoscaler |
-| `instanceId`        | Instance ID of the Memorystore Cluster to be monitored by the Autoscaler |
+| Key          | Description                                                              |
+| ------------ | ------------------------------------------------------------------------ |
+| `projectId`  | Project ID of the Memorystore Cluster to be monitored by the Autoscaler  |
+| `regionId`   | Region ID of the Memorystore Cluster to be monitored by the Autoscaler   |
+| `instanceId` | Instance ID of the Memorystore Cluster to be monitored by the Autoscaler |
 
 ### Required for a Cloud Run functions deployment
 
-| Key                 | Description |
-| ------------------- | ----------- |
+| Key                 | Description                                                                                                                                               |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `scalerPubSubTopic` | PubSub topic for the Poller function to publish messages for the Scaler function. The topic must be in the format `projects/{projects}/topics/{topicId}`. |
 
 ### Optional
 
-| Key                      | Default Value    | Description |
-| ------------------------ | ---------------- | ----------- |
-| `units`                  | `SHARDS`         | Specifies the units for capacity. Currently `SHARDS` is the only valid unit. |
-| `engine`                 | `REDIS`          | Specifies the engine for a cluster. Options are `REDIS` and `VALKEY`. |
-| `minSize`                | 1                | Minimum number of Memorystore Cluster shards that the instance can be scaled IN to. |
-| `maxSize`                | 10               | Maximum number of Memorystore Cluster shards that the instance can be scaled OUT to. |
-| `scalingProfile`         | `CPU_AND_MEMORY` | Scaling profiles that should be used. Options are: `CPU_AND_MEMORY`, `CPU`, `MEMORY`, or `CUSTOM`. See the [scaling profiles section][autoscaler-scaling-profiles] in the Scaler component page for more information. |
-| `scalingMethod`          | `STEPWISE`       | Scaling method that should be used. Options are: `STEPWISE`, `DIRECT` and `LINEAR`. See the [scaling methods section][autoscaler-scaler-methods] in the Scaler component page for more information. |
-| `scalingRules`           | `undefined`      | Scaling rules to be used when the `CUSTOM` scaling profile is supplied. See the [scaling profiles section][autoscaler-scaling-profiles] in the Scaler component page for more information. |
-| `stepSize`               | 1                | Number of shards that should be added or removed when scaling with the `STEPWISE` method. |
-| `scaleInLimit`           | `undefined`      | Maximum number of shards that can be removed on a single step when scaling with the `LINEAR` method. If `undefined` or `0`, it will not limit the number of shards. |
-| `scaleOutLimit`          | `undefined`      | Maximum number of shards that can be added on a single step when scaling with the `LINEAR` method. If `undefined` or `0`, it will not limit the number of shards. |
-| `minFreeMemoryPercent`   | 30               | Percentage of total memory to maintain as safety (i.e. free, unused) headroom.  |
-| `scaleOutCoolingMinutes` | 10               | Minutes to wait after scaling IN or OUT before a scale OUT event can be processed. |
-| `scaleInCoolingMinutes`  | 20               | Minutes to wait after scaling IN or OUT before a scale IN event can be processed. |
-| `stateProjectId`         | `${projectId}`   | The project ID where the Autoscaler state will be persisted. By default it is persisted using [Cloud Firestore][cloud-firestore] in the same project as the Memorystore Cluster instance. |
-| `stateDatabase`          | Object           | An Object that can override the database for managing the state of the Autoscaler. The default database is Firestore. Refer to the [state database](#state-database) for details. |
-| `metrics`                | Array            | Array of objects to represent the metrics used to decide when the Memorystore Cluster instance should be scaled IN or OUT. Refer to the [metrics definition table](#metrics-parameters) to see the fields used for defining metrics. |
-| `downstreamPubSubTopic`  | `undefined`      | Set this parameter to `projects/${projectId}/topics/downstream-topic` if you want the the Autoscaler to publish events that can be consumed by downstream applications.  See [Downstream messaging](../scaler/README.md#downstream-messaging) for more information. |
+| Key                      | Default Value    | Description                                                                                                                                                                                                                                                        |
+| ------------------------ | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `units`                  | `SHARDS`         | Specifies the units for capacity. Currently `SHARDS` is the only valid unit.                                                                                                                                                                                       |
+| `engine`                 | `REDIS`          | Specifies the engine for a cluster. Options are `REDIS` and `VALKEY`.                                                                                                                                                                                              |
+| `minSize`                | 1                | Minimum number of Memorystore Cluster shards that the instance can be scaled IN to.                                                                                                                                                                                |
+| `maxSize`                | 10               | Maximum number of Memorystore Cluster shards that the instance can be scaled OUT to.                                                                                                                                                                               |
+| `scalingProfile`         | `CPU_AND_MEMORY` | Scaling profiles that should be used. Options are: `CPU_AND_MEMORY`, `CPU`, `MEMORY`, or `CUSTOM`. See the [scaling profiles section][autoscaler-scaling-profiles] in the Scaler component page for more information.                                              |
+| `scalingMethod`          | `STEPWISE`       | Scaling method that should be used. Options are: `STEPWISE`, `DIRECT` and `LINEAR`. See the [scaling methods section][autoscaler-scaler-methods] in the Scaler component page for more information.                                                                |
+| `scalingRules`           | `undefined`      | Scaling rules to be used when the `CUSTOM` scaling profile is supplied. See the [scaling profiles section][autoscaler-scaling-profiles] in the Scaler component page for more information.                                                                         |
+| `stepSize`               | 1                | Number of shards that should be added or removed when scaling with the `STEPWISE` method.                                                                                                                                                                          |
+| `scaleInLimit`           | `undefined`      | Maximum number of shards that can be removed on a single step when scaling with the `LINEAR` method. If `undefined` or `0`, it will not limit the number of shards.                                                                                                |
+| `scaleOutLimit`          | `undefined`      | Maximum number of shards that can be added on a single step when scaling with the `LINEAR` method. If `undefined` or `0`, it will not limit the number of shards.                                                                                                  |
+| `minFreeMemoryPercent`   | 30               | Percentage of total memory to maintain as safety (i.e. free, unused) headroom.                                                                                                                                                                                     |
+| `scaleOutCoolingMinutes` | 10               | Minutes to wait after scaling IN or OUT before a scale OUT event can be processed.                                                                                                                                                                                 |
+| `scaleInCoolingMinutes`  | 20               | Minutes to wait after scaling IN or OUT before a scale IN event can be processed.                                                                                                                                                                                  |
+| `stateProjectId`         | `${projectId}`   | The project ID where the Autoscaler state will be persisted. By default it is persisted using [Cloud Firestore][cloud-firestore] in the same project as the Memorystore Cluster instance.                                                                          |
+| `stateDatabase`          | Object           | An Object that can override the database for managing the state of the Autoscaler. The default database is Firestore. Refer to the [state database](#state-database) for details.                                                                                  |
+| `metrics`                | Array            | Array of objects to represent the metrics used to decide when the Memorystore Cluster instance should be scaled IN or OUT. Refer to the [metrics definition table](#metrics-parameters) to see the fields used for defining metrics.                               |
+| `downstreamPubSubTopic`  | `undefined`      | Set this parameter to `projects/${projectId}/topics/downstream-topic` if you want the the Autoscaler to publish events that can be consumed by downstream applications. See [Downstream messaging](../scaler/README.md#downstream-messaging) for more information. |
 
 ## Metrics
 
@@ -127,22 +127,22 @@ memory utilization metrics, and includes rules for scaling based on these.
 The Autoscaler monitors the workload of an instance by
 polling the time series of the following:
 
-*   `redis.googleapis.com/cluster/cpu/average_utilization`
-*   `redis.googleapis.com/cluster/cpu/maximum_utilization`
-*   `redis.googleapis.com/cluster/memory/average_utilization`
-*   `redis.googleapis.com/cluster/memory/maximum_utilization`
-*   `memorystore.googleapis.com/instance/cpu/average_utilization`
-*   `memorystore.googleapis.com/instance/cpu/maximum_utilization`
-*   `memorystore.googleapis.com/instance/memory/average_utilization`
-*   `memorystore.googleapis.com/instance/memory/maximum_utilization`
+- `redis.googleapis.com/cluster/cpu/average_utilization`
+- `redis.googleapis.com/cluster/cpu/maximum_utilization`
+- `redis.googleapis.com/cluster/memory/average_utilization`
+- `redis.googleapis.com/cluster/memory/maximum_utilization`
+- `memorystore.googleapis.com/instance/cpu/average_utilization`
+- `memorystore.googleapis.com/instance/cpu/maximum_utilization`
+- `memorystore.googleapis.com/instance/memory/average_utilization`
+- `memorystore.googleapis.com/instance/memory/maximum_utilization`
 
 By default, the following metrics will prevent scale-in operations if their
 value is greater than zero:
 
-*   `redis.googleapis.com/cluster/stats/average_expired_keys`
-*   `redis.googleapis.com/cluster/stats/maximum_expired_keys`
-*   `memorystore.googleapis.com/instance/stats/average_expired_keys`
-*   `memorystore.googleapis.com/instance/stats/maximum_expired_keys`
+- `redis.googleapis.com/cluster/stats/average_expired_keys`
+- `redis.googleapis.com/cluster/stats/maximum_expired_keys`
+- `memorystore.googleapis.com/instance/stats/average_expired_keys`
+- `memorystore.googleapis.com/instance/stats/maximum_expired_keys`
 
 Google recommends initially using the provided metrics and rules unchanged.
 However, in some cases you may want to define custom rules based on metrics in
@@ -164,19 +164,19 @@ Memorystore instances.
 
 ### Selectors
 
-| Key                   | Description |
-| --------------------- | ----------- |
-| `name`                | A unique name of the for the metric to be evaulated. |
-| `filter`              | The [metric][metrics] and [filter][time-series-filter] that should be used when querying for data. The Autoscaler will automatically add the filter expressions for Memorystore resources and project ID. |
+| Key      | Description                                                                                                                                                                                               |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`   | A unique name of the for the metric to be evaulated.                                                                                                                                                      |
+| `filter` | The [metric][metrics] and [filter][time-series-filter] that should be used when querying for data. The Autoscaler will automatically add the filter expressions for Memorystore resources and project ID. |
 
 Note that the `name` parameter must not match one of the default metrics:
 
-*   `cpu_maximum_utilization`
-*   `cpu_average_utilization`
-*   `memory_maximum_utilization`
-*   `memory_average_utilization`
-*   `maximum_evicted_keys`
-*   `average_evicted_keys`
+- `cpu_maximum_utilization`
+- `cpu_average_utilization`
+- `memory_maximum_utilization`
+- `memory_average_utilization`
+- `maximum_evicted_keys`
+- `average_evicted_keys`
 
 ### Parameters
 
@@ -185,11 +185,11 @@ Autoscaler. Please refer to
 [Filtering and aggregation][filtering-and-aggregation] for a complete discussion
 on building metric filters and aggregating data points.
 
-| Key                        | Default      | Description |
-| -------------------------- | ------------ | ----------- |
-| `reducer`                  | `REDUCE_SUM` | The reducer specifies how the data points should be aggregated when querying for metrics, typically `REDUCE_SUM`. For more details please refer to [Alert Policies - Reducer][alertpolicy-reducer] documentation. |
-| `aligner`                  | `ALIGN_MAX`  | The aligner specifies how the data points should be aligned in the time series, typically `ALIGN_MAX`. For more details please refer to [Alert Policies - Aligner][alertpolicy-aligner] documentation. |
-| `period`                   | 60           | Defines the period of time in units of seconds at which aggregation takes place. Typically the period should be 60. |
+| Key       | Default      | Description                                                                                                                                                                                                       |
+| --------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `reducer` | `REDUCE_SUM` | The reducer specifies how the data points should be aggregated when querying for metrics, typically `REDUCE_SUM`. For more details please refer to [Alert Policies - Reducer][alertpolicy-reducer] documentation. |
+| `aligner` | `ALIGN_MAX`  | The aligner specifies how the data points should be aligned in the time series, typically `ALIGN_MAX`. For more details please refer to [Alert Policies - Aligner][alertpolicy-aligner] documentation.            |
+| `period`  | 60           | Defines the period of time in units of seconds at which aggregation takes place. Typically the period should be 60.                                                                                               |
 
 ### Example
 
@@ -212,26 +212,26 @@ custom scaling profile using a [custom rule set][custom-rule-set].
 The table describes the objects used to specify the database
 for managing the state of the Autoscaler.
 
-| Key                        | Default      | Description |
-| -------------------------- | ------------ | ----------- |
-| `name`                     | `firestore`  | Name of the database for managing the state of the Autoscaler. By default, Firestore is used. The currently supported values are `firestore` and `spanner`. |
+| Key    | Default     | Description                                                                                                                                                 |
+| ------ | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name` | `firestore` | Name of the database for managing the state of the Autoscaler. By default, Firestore is used. The currently supported values are `firestore` and `spanner`. |
 
 ### State Management in Firestore
 
 If the value of `name` is `firestore`, the following values are optional.
 
-| Key                        | Description |
-| -------------------------- | ----------- |
-| `databaseId`               | The database ID of the Firestore database you want to use to store the autoscaler state. If omitted, the default (`(default)`) database will be used. Note that the database must exist. |
+| Key          | Description                                                                                                                                                                              |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `databaseId` | The database ID of the Firestore database you want to use to store the autoscaler state. If omitted, the default (`(default)`) database will be used. Note that the database must exist. |
 
 ### State Management in Cloud Spanner
 
 If the value of `name` is `spanner`, the following values are required.
 
-| Key                        | Description |
-| -------------------------- | ----------- |
-| `instanceId`               | The instance id of Memorystore Cluster which you want to manage the state. |
-| `databaseId`               | The database id of Memorystore Cluster instance which you want to manage the state. |
+| Key          | Description                                                                         |
+| ------------ | ----------------------------------------------------------------------------------- |
+| `instanceId` | The instance id of Memorystore Cluster which you want to manage the state.          |
+| `databaseId` | The database id of Memorystore Cluster instance which you want to manage the state. |
 
 When using Cloud Spanner to manage the state, a table with the following
 DDL is created at runtime.
