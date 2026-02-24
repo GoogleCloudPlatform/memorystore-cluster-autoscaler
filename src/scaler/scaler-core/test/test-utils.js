@@ -14,7 +14,6 @@
  */
 const sinon = require('sinon');
 const State = require('../state.js');
-const unionBy = require('lodash.unionby');
 
 const parameters = require('./samples/parameters.json');
 
@@ -44,7 +43,7 @@ function createClusterParameters(overrideParams) {
 }
 
 /**
- * Merge metrics objects
+ * Merge metrics objects, prioritizing metricsOverlay
  *
  * @param {AutoscalerMemorystoreCluster} cluster
  * @param {(MemorystoreClusterMetric | MemorystoreClusterMetricValue)[]}
@@ -52,7 +51,13 @@ function createClusterParameters(overrideParams) {
  * @return {(MemorystoreClusterMetric | MemorystoreClusterMetricValue)[]}
  */
 function metricsOverlay(cluster, metricsOverlay) {
-  return unionBy(metricsOverlay, cluster.metrics, 'name');
+  const retval = [...metricsOverlay];
+  for (const clusterMetric of cluster.metrics) {
+    if (!metricsOverlay.some((m) => m.name === clusterMetric.name)) {
+      retval.push(clusterMetric);
+    }
+  }
+  return retval;
 }
 
 /**

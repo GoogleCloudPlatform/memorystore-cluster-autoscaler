@@ -187,7 +187,7 @@ describe('stateFirestoreTests', () => {
     stubFirestoreInstance.doc.withArgs(DOC_PATH).returns(docRef);
     // Clear cached Firestore instances from the memoized function in
     // StateFirestore:
-    StateFirestore.getFirestoreClient.cache.clear();
+    StateFirestore.firestoreClients.clear();
   });
 
   it('should create a StateFirestore object on memorystore projectId', function () {
@@ -457,7 +457,7 @@ describe('stateSpannerTests', () => {
 
     // Clear cached Spanner DB instances from the memoized function in
     // StateSpanner
-    StateSpanner.getSpannerDatabaseClient.cache.clear();
+    StateSpanner.databaseClients.clear();
   });
 
   it('should create a StateSpanner object connecting to memorystore projectId', function () {
