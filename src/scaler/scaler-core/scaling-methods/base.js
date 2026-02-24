@@ -75,8 +75,10 @@ function getScaleSuggestionMessage(cluster, suggestedSize, scalingDirection) {
  */
 function getRuleConditionMetrics(ruleResult) {
   let /** @type {NestedCondition[]} */ ruleConditions;
+  // eslint-disable-next-line no-unsafe-optional-chaining
   if (ruleResult?.conditions && 'all' in ruleResult?.conditions) {
     ruleConditions = ruleResult.conditions.all;
+    // eslint-disable-next-line no-unsafe-optional-chaining
   } else if (ruleResult?.conditions && 'any' in ruleResult?.conditions) {
     ruleConditions = ruleResult?.conditions?.any;
   } else {

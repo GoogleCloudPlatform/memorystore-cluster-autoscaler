@@ -60,6 +60,7 @@
   "devDependencies": {
     "@commitlint/cli": "^19.8.0",
     "@commitlint/config-conventional": "^19.8.0",
+    "@eslint/js": "^10.0.1",
     "@sinonjs/referee": "^11.0.1",
     "@types/js-yaml": "^4.0.9",
     "@types/lodash": "^4.17.16",
@@ -68,10 +69,9 @@
     "@types/node": "^20.17.24",
     "@types/rewire": "^2.5.30",
     "@types/sinon": "17.0.4",
-    "eslint": "^8.57.1",
-    "eslint-config-google": "^0.14.0",
-    "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-prettier": "^5.2.3",
+    "eslint": "^10.0.2",
+    "eslint-plugin-prettier": "^5.5.5",
+    "globals": "^17.3.0",
     "husky": "^9.1.7",
     "lodash.unionby": "^4.8.0",
     "markdown-link-check": "3.13.7",
@@ -85,7 +85,7 @@
     "typescript": "^5.8.2"
   },
   "engines": {
-    "node": ">=20.0.0 || >=22.0.0",
+    "node": ">=20.20.0",
     "npm": ">=10.0.0"
   }
 }

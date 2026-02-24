@@ -558,9 +558,8 @@ async function aggregateMetrics(clusters) {
  * Handle a PubSub message and check if scaling is required
  *
  * @param {{data: string}} pubSubEvent
- * @param {*} context
  */
-async function checkMemorystoreClusterScaleMetricsPubSub(pubSubEvent, context) {
+async function checkMemorystoreClusterScaleMetricsPubSub(pubSubEvent) {
   try {
     const payload = Buffer.from(pubSubEvent.data, 'base64').toString();
     try {

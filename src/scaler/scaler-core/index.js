@@ -98,6 +98,7 @@ function getScalingRuleSet(cluster) {
         projectId: cluster.projectId,
         regionId: cluster.regionId,
         clusterId: cluster.clusterId,
+        err,
       });
       scalingRuleSet = require(
         SCALING_PROFILES_FOLDER + DEFAULT_PROFILE_NAME.toLowerCase(),
@@ -138,6 +139,7 @@ function getScalingMethod(cluster) {
       projectId: cluster.projectId,
       regionId: cluster.regionId,
       clusterId: cluster.clusterId,
+      err,
     });
     scalingMethod = require(
       SCALING_METHODS_FOLDER + DEFAULT_METHOD_NAME.toLowerCase(),
@@ -465,9 +467,8 @@ async function processScalingRequest(cluster, autoscalerState) {
  * Handle scale request from a PubSub event.
  *
  * @param {{data:string}} pubSubEvent -- a CloudEvent object.
- * @param {*} context
  */
-async function scaleMemorystoreClusterPubSub(pubSubEvent, context) {
+async function scaleMemorystoreClusterPubSub(pubSubEvent) {
   try {
     const payload = Buffer.from(pubSubEvent.data, 'base64').toString();
     const cluster = JSON.parse(payload);
@@ -639,6 +640,7 @@ async function readStateCheckOngoingLRO(cluster, autoscalerState) {
         );
       }
     } catch (e) {
+      // eslint-disable-next-line preserve-caught-error
       throw new Error(
         `GetOperation(${savedState.scalingOperationId}) could not decode OperationMetadata: ${e}`,
       );
@@ -728,7 +730,7 @@ async function readStateCheckOngoingLRO(cluster, autoscalerState) {
         savedState.scalingMethod = null;
       }
     } else {
-      if (!!metadata.requestedCancellation) {
+      if (metadata.requestedCancellation) {
         logger.info({
           message: `----- ${cluster.projectId}/${cluster.regionId}/${cluster.clusterId}: Last scaling request for ${savedState.scalingRequestedSize} CANCEL REQUESTED. Started: ${createTimeStamp}`,
           projectId: cluster.projectId,

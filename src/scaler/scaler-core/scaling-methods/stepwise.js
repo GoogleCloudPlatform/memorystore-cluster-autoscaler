@@ -40,6 +40,7 @@ const baseModule = require('./base');
  *   Not in use.
  * @return {number} Final suggested size for the cluster.
  */
+// eslint-disable-next-line no-unused-vars
 function getSuggestedSize(cluster, direction, engineAnalysis) {
   if (direction === AutoscalerDirection.OUT) {
     return cluster.currentSize + cluster.stepSize;

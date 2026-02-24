@@ -44,6 +44,7 @@ const baseModule = require('./base');
  *   Not in use.
  * @return {number} Final suggested size for the cluster.
  */
+// eslint-disable-next-line no-unused-vars
 function getSuggestedSize(cluster, direction, engineAnalysis) {
   return cluster.maxSize;
 }
@@ -56,6 +57,7 @@ function getSuggestedSize(cluster, direction, engineAnalysis) {
  * @param {RuleSet} ruleSet to use to determine scaling decisions.
  * @return {Promise<number>}
  */
+// eslint-disable-next-line no-unused-vars
 async function calculateSize(cluster, ruleSet) {
   return baseModule.calculateScalingDecision(
     cluster,
