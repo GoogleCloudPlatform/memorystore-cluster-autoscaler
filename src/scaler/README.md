@@ -361,7 +361,7 @@ Notable attributes are:
   the data in the messages encoded as Base64 containing JSON.
 - **message.publishTime:** timestamp when the message was published
 - **message.data:** the message payload encoded as Base64 containing a JSON
-  string. In the example, the [decoded][base-64-decode] string contains the
+  string. In the example, the base64-decoded string contains the
   following data:
 
 ```json
@@ -527,7 +527,6 @@ for further details.
 
 [alert-incidents]: https://cloud.google.com/monitoring/alerts/log-based-incidents
 [autoscaler-poller-parameters]: ../poller/README.md#configuration-parameters
-[base-64-decode]: https://www.base64decode.org/
 [charts-and-alerts]: https://cloud.google.com/logging/docs/logs-based-metrics#monitoring
 [directly-proportional]: https://en.wikipedia.org/wiki/Proportionality_(mathematics)#Direct_proportionality
 [log-based-metrics]: https://cloud.google.com/logging/docs/logs-based-metrics
