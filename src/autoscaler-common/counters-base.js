@@ -162,7 +162,7 @@ class DiagToBunyanLogger {
    * @param {any[]} args
    */
   verbose(message, ...args) {
-    logger.trace('otel: ' + message, args);
+    logger.trace('otel: ' + message, ...args);
   }
 
   /**
@@ -170,21 +170,21 @@ class DiagToBunyanLogger {
    * @param {any[]} args
    */
   debug(message, ...args) {
-    logger.debug('otel: ' + message, args);
+    logger.debug('otel: ' + message, ...args);
   }
   /**
    * @param {string} message
    * @param {any[]} args
    */
   info(message, ...args) {
-    logger.info('otel: ' + message, args);
+    logger.info('otel: ' + message, ...args);
   }
   /**
    * @param {string} message
    * @param {any[]} args
    */
   warn(message, ...args) {
-    logger.warn('otel: ' + message, args);
+    logger.warn('otel: ' + message, ...args);
   }
   /**
    * @param {string} message
@@ -192,7 +192,7 @@ class DiagToBunyanLogger {
    */
   error(message, ...args) {
     if (!this.suppressErrors) {
-      logger.error('otel: ' + message, args);
+      logger.error('otel: ' + message, ...args);
     }
   }
 }
