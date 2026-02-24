@@ -1,5 +1,17 @@
 # Changelog
 
+## [3.1.0](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/compare/v3.0.0...v3.1.0) (2026-02-24)
+
+
+### Features
+
+* prevent scaling in to less than 1/3 of current size ([#126](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/issues/126)) ([315a743](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/commit/315a7435978812660f63d341058e809ab84c1a1f))
+
+
+### Bug Fixes
+
+* **docs:** correct casing for VALKEY engine variable in Readme ([a63e60f](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/commit/a63e60f57566e737f888a270fac4632fd91a891c))
+
 ## [3.0.0](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/compare/v2.0.1...v3.0.0) (2025-03-18)
 
 
