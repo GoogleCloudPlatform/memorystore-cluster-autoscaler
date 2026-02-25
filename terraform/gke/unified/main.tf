@@ -18,11 +18,12 @@ terraform {
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = "6.24.0"
+      version = "7.21.0"
     }
     kubernetes = {
-      source  = "hashicorp/kubernetes"
-      version = "2.36.0"
+      source = "hashicorp/kubernetes"
+      # unversioned kubernetes_namespace is deprecated in 3.0.0
+      version = "< 3.0.0"
     }
   }
 }
