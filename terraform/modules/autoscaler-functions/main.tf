@@ -101,7 +101,7 @@ resource "google_cloudfunctions2_function" "poller_function" {
   }
 
   service_config {
-    available_memory      = "256M"
+    available_memory      = "512M"
     ingress_settings      = "ALLOW_INTERNAL_AND_GCLB"
     service_account_email = var.poller_sa_email
   }
@@ -138,7 +138,7 @@ resource "google_cloudfunctions2_function" "scaler_function" {
   }
 
   service_config {
-    available_memory      = "256M"
+    available_memory      = "512M"
     ingress_settings      = "ALLOW_INTERNAL_AND_GCLB"
     service_account_email = var.scaler_sa_email
   }
