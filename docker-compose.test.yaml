@@ -44,7 +44,7 @@ services:
 
   node_24_tests:
     container_name: node_24_tests
-    image: node:24.13-slim
+    image: node:24.14.0-slim
     working_dir: /app
     entrypoint: ["/bin/bash", "-e", "-x", "-c"]
     command:
@@ -57,7 +57,7 @@ services:
 
   cleanup:
     container_name: cleanup
-    image: node:24.13-slim
+    image: node:24.14.0-slim
     working_dir: /app
     entrypoint: ["/bin/bash", "-e", "-x", "-c"]
     command:
