@@ -21,7 +21,7 @@
 services:
   node_20_tests:
     container_name: node_20_tests
-    image: node:20.20.0-slim
+    image: node:24.14.0-slim
     working_dir: /app
     entrypoint: ["/bin/bash", "-e", "-x", "-c"]
     command:
@@ -31,7 +31,7 @@ services:
 
   node_22_tests:
     container_name: node_22_tests
-    image: node:22.22-slim
+    image: node:24.14.0-slim
     working_dir: /app
     entrypoint: ["/bin/bash", "-e", "-x", "-c"]
     command:
