@@ -1,5 +1,31 @@
 # Changelog
 
+## [3.1.1](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/compare/v3.1.0...v3.1.1) (2026-02-26)
+
+
+### Bug Fixes
+
+* **deploy:** increase memory to 512MiB to avoid OOMs ([de5b6c8](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/commit/de5b6c888ee6fbc6a327e49a251eab92034ab5f1))
+* **deps:** override vulnerable deps, switch from nyc to c8 ([c61e5bb](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/commit/c61e5bb4e7eb5feb3a6c97914f02a0c72baffe67))
+* **deps:** remove lodash dependency ([13dc1be](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/commit/13dc1bed332cb123e85360aa267d886478f24a74))
+* **deps:** update actions/checkout action to v6 ([#131](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/issues/131)) ([c67ab5e](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/commit/c67ab5eadbd6fa00d9faa254ac2da3e0ec5e6bb8))
+* **deps:** update actions/setup-node action to v6 ([#132](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/issues/132)) ([dabe847](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/commit/dabe84758423622eae3d2570e5ff837faa4b3a2a))
+* **deps:** update all devDependencies ([fc8722c](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/commit/fc8722c0ae24050c508e30e803b36690bc9e7756))
+* **deps:** update dependency googleapis to v171 ([#94](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/issues/94)) ([f8cc880](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/commit/f8cc880989f3eeffb277c466bca3140a81d3de38))
+* **deps:** update dependency node to v24 ([#133](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/issues/133)) ([18189a6](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/commit/18189a6b1117791a61ccea0705e4532704725eee))
+* **deps:** update docker-containers ([#130](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/issues/130)) ([b671e09](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/commit/b671e097db444af7583538d5fe268e71f1be527c))
+* **deps:** update eslint to v10 ([01e1ab1](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/commit/01e1ab13cc034d0974ed233a90899fa233f5cf8d))
+* **deps:** update github/codeql-action action to v4 ([#134](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/issues/134)) ([f2ce274](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/commit/f2ce2742c69f77d18c13db915950050538391320))
+* **deps:** update golang-modules ([#95](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/issues/95)) ([471546a](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/commit/471546a8735570a2c61eefea66cc09e94719c0eb))
+* **deps:** update hashicorp/setup-terraform action to v4 ([#135](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/issues/135)) ([8a0b6de](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/commit/8a0b6dee525662db0964aeebafb086db66abfcc8))
+* **deps:** update module github.com/hashicorp/go-getter to v1.7.9 [security] ([#107](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/issues/107)) ([3cb530f](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/commit/3cb530f8433cfc39d3340fbacc32af86ce7466e1))
+* **deps:** update module github.com/ulikunitz/xz to v0.5.15 [security] ([#109](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/issues/109)) ([a045718](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/commit/a045718f9a8ceea9db20d8c6d4a511108ed1473b))
+* **deps:** update node.js to v22.22.0 ([#140](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/issues/140)) ([d9dbfd4](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/commit/d9dbfd47cb905579182fa291b483cb2bb45f8552))
+* **deps:** update npm-packages ([#93](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/issues/93)) ([c854ac0](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/commit/c854ac0931637926643fbec33b78eefa32b8ebe5))
+* **deps:** update runtime dependencies ([08246a2](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/commit/08246a276aa46efa47c9bf3b070ce4141a92b030))
+* **deps:** update terraform ([#143](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/issues/143)) ([5e08a15](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/commit/5e08a1519100521ce197166957e9ac58b56e65d1))
+* **deps:** update to node v22 ([b902d9a](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/commit/b902d9a5ae4ff6be126daf940adbb210d6e4e01f))
+
 ## [3.1.0](https://github.com/GoogleCloudPlatform/memorystore-cluster-autoscaler/compare/v3.0.0...v3.1.0) (2026-02-24)
 
 
