@@ -21,10 +21,13 @@
  *
  */
 const {
+  resourceFromAttributes,
+  detectResources,
+} = require('@opentelemetry/resources');
+const {
   MeterProvider,
   PeriodicExportingMetricReader,
 } = require('@opentelemetry/sdk-metrics');
-const {Resource} = require('@opentelemetry/resources');
 const {
   MetricExporter: GcpMetricExporter,
 } = require('@google-cloud/opentelemetry-cloud-monitoring-exporter');
@@ -57,9 +60,9 @@ const {version: packageVersion} = require('../../package.json');
  */
 /** @type {CounterAttributes} */
 const RESOURCE_ATTRIBUTES = {
-  [Semconv.SEMRESATTRS_SERVICE_NAMESPACE]: 'googlecloudplatform',
-  [Semconv.SEMRESATTRS_SERVICE_NAME]: 'memorystore-cluster-autoscaler',
-  [Semconv.SEMRESATTRS_SERVICE_VERSION]: packageVersion,
+  [Semconv.ATTR_SERVICE_NAMESPACE]: 'googlecloudplatform',
+  [Semconv.ATTR_SERVICE_NAME]: 'memorystore-cluster-autoscaler',
+  [Semconv.ATTR_SERVICE_VERSION]: packageVersion,
 };
 
 const COUNTER_ATTRIBUTE_NAMES = {
@@ -71,9 +74,9 @@ const COUNTER_ATTRIBUTE_NAMES = {
  * The prefix to use for any autoscaler counters.
  */
 const COUNTERS_PREFIX =
-  RESOURCE_ATTRIBUTES[Semconv.SEMRESATTRS_SERVICE_NAMESPACE] +
+  RESOURCE_ATTRIBUTES[Semconv.ATTR_SERVICE_NAMESPACE] +
   '/' +
-  RESOURCE_ATTRIBUTES[Semconv.SEMRESATTRS_SERVICE_NAME] +
+  RESOURCE_ATTRIBUTES[Semconv.ATTR_SERVICE_NAME] +
   '/';
 
 /** @enum{string} */
@@ -259,13 +262,14 @@ async function initMetrics() {
       }
     }
 
-    const resources = new GcpDetectorSync()
-      .detect()
-      .merge(new Resource(RESOURCE_ATTRIBUTES));
+    const resources = detectResources({
+      detectors: [new GcpDetectorSync()],
+    }).merge(resourceFromAttributes(RESOURCE_ATTRIBUTES));
     if (resources.waitForAsyncAttributes) {
       await resources.waitForAsyncAttributes();
     }
 
+    /** @type {import('@opentelemetry/sdk-metrics').PushMetricExporter} */
     let exporter;
     if (process.env.OTEL_COLLECTOR_URL) {
       switch (process.env.OTEL_IS_LONG_RUNNING_PROCESS) {
