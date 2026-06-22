@@ -77,6 +77,14 @@ const shardDefaults = {
   stepSize: 1,
 };
 
+const replicaDefaults = {
+  units: AutoscalerUnits.REPLICAS,
+  scaleOutCPUThreshold: 0.8,
+  scalingMethod: 'REPLICA_CPU',
+  scalingProfile: 'CPU',
+  engine: AutoscalerEngine.VALKEY,
+};
+
 const metricDefaults = {
   period: 60,
   aligner: 'ALIGN_MAX',
@@ -119,6 +127,67 @@ async function getMemorystoreClusterMetadata(cluster) {
   });
 
   return clusterMetadata;
+}
+
+/**
+ * Get metadata for replica_count (units=REPLICAS).
+ *
+ * @param {AutoscalerMemorystoreCluster} cluster
+ * @return {Promise<MemorystoreClusterMetadata>}
+ */
+async function getMemorystoreClusterReplicaMetadata(cluster) {
+  logger.info({
+    message: `----- ${cluster.projectId}/${cluster.regionId}/${cluster.clusterId}: Replica metadata -----`,
+    projectId: cluster.projectId,
+    regionId: cluster.regionId,
+    clusterId: cluster.clusterId,
+  });
+
+  if (cluster.engine !== AutoscalerEngine.VALKEY) {
+    throw new Error(
+      `units=REPLICAS requires engine=VALKEY for ${cluster.projectId}/${cluster.clusterId}`,
+    );
+  }
+
+  const request = {
+    name: `projects/${cluster.projectId}/locations/${cluster.regionId}/instances/${cluster.clusterId}`,
+  };
+  const [metadata] = await memorystoreValkeyClient.getInstance(request);
+
+  const clusterMetadata = {
+    currentSize: assertDefined(metadata['replicaCount']),
+  };
+
+  logger.debug({
+    message: `replicaCount: ${clusterMetadata.currentSize}`,
+    projectId: cluster.projectId,
+    regionId: cluster.regionId,
+    clusterId: cluster.clusterId,
+  });
+
+  return clusterMetadata;
+}
+
+/**
+ * Metrics for replica CPU autoscaling (role=replica).
+ *
+ * @param {AutoscalerMemorystoreCluster} cluster
+ * @return {MemorystoreClusterMetric[]}
+ */
+function buildReplicaMetrics(cluster) {
+  const metricsPrefix = 'memorystore.googleapis.com/instance';
+  return [
+    {
+      name: 'cpu_maximum_utilization',
+      filter:
+        createBaseFilter(cluster) +
+        `metric.type="${metricsPrefix}/cpu/maximum_utilization" ` +
+        'AND metric.labels.role="replica"',
+      reducer: 'REDUCE_MAX',
+      aligner: 'ALIGN_MAX',
+      period: 300,
+    },
+  ];
 }
 
 /**
@@ -408,6 +477,64 @@ async function parseAndEnrichPayload(payload) {
     // Merge in the defaults
     clusters[clusterIdx] = {...baseDefaults, ...clusters[clusterIdx]};
 
+    if (clusters[clusterIdx].units === undefined) {
+      clusters[clusterIdx].units = AutoscalerUnits.SHARDS;
+      logger.debug({
+        message: `  Defaulted units to ${clusters[clusterIdx].units}`,
+        projectId: clusters[clusterIdx].projectId,
+        regionId: clusters[clusterIdx].regionId,
+        clusterId: clusters[clusterIdx].clusterId,
+      });
+    }
+
+    const units = clusters[clusterIdx].units.toUpperCase();
+
+    if (units === AutoscalerUnits.REPLICAS) {
+      clusters[clusterIdx].units = AutoscalerUnits.REPLICAS;
+      // replicaDefaults overrides baseDefaults (REPLICA_CPU); preserve user sizing/threshold.
+      const userMinSize = clusters[clusterIdx].minSize;
+      const userMaxSize = clusters[clusterIdx].maxSize;
+      const userScaleOutCPUThreshold = clusters[clusterIdx].scaleOutCPUThreshold;
+      clusters[clusterIdx] = {...clusters[clusterIdx], ...replicaDefaults};
+      if (userMinSize != null) {
+        clusters[clusterIdx].minSize = userMinSize;
+      }
+      if (userMaxSize != null) {
+        clusters[clusterIdx].maxSize = userMaxSize;
+      }
+      if (userScaleOutCPUThreshold != null) {
+        clusters[clusterIdx].scaleOutCPUThreshold = userScaleOutCPUThreshold;
+      }
+      if (clusters[clusterIdx].minSize < 0) {
+        throw new Error(
+          `INVALID CONFIG: minSize (${clusters[clusterIdx].minSize}) must be >= 0 for REPLICAS.`,
+        );
+      }
+      if (clusters[clusterIdx].minSize > clusters[clusterIdx].maxSize) {
+        throw new Error(
+          `INVALID CONFIG: minSize (${clusters[clusterIdx].minSize}) is larger than ` +
+            `maxSize (${clusters[clusterIdx].maxSize}).`,
+        );
+      }
+      clusters[clusterIdx].metrics = buildReplicaMetrics(clusters[clusterIdx]);
+      try {
+        clusters[clusterIdx] = {
+          ...clusters[clusterIdx],
+          ...(await getMemorystoreClusterReplicaMetadata(clusters[clusterIdx])),
+        };
+        clustersFound.push(clusters[clusterIdx]);
+      } catch (err) {
+        logger.error({
+          message: `Unable to retrieve replica metadata for ${clusters[clusterIdx].projectId}/${clusters[clusterIdx].regionId}/${clusters[clusterIdx].clusterId}: ${err}`,
+          projectId: clusters[clusterIdx].projectId,
+          regionId: clusters[clusterIdx].regionId,
+          clusterId: clusters[clusterIdx].clusterId,
+          err: err,
+        });
+      }
+      continue;
+    }
+
     if (clusters[clusterIdx].minSize < CLUSTER_SIZE_MIN) {
       throw new Error(
         `INVALID CONFIG: minSize (${clusters[clusterIdx].minSize}) is below the ` +
@@ -422,22 +549,12 @@ async function parseAndEnrichPayload(payload) {
       );
     }
 
-    if (clusters[clusterIdx].units === undefined) {
+    if (units === AutoscalerUnits.SHARDS) {
       clusters[clusterIdx].units = AutoscalerUnits.SHARDS;
-      logger.debug({
-        message: `  Defaulted units to ${clusters[clusterIdx].units}`,
-        projectId: clusters[clusterIdx].projectId,
-        regionId: clusters[clusterIdx].regionId,
-        clusterId: clusters[clusterIdx].clusterId,
-      });
-    }
-
-    if (clusters[clusterIdx].units.toUpperCase() == AutoscalerUnits.SHARDS) {
-      clusters[clusterIdx].units = clusters[clusterIdx].units.toUpperCase();
       clusters[clusterIdx] = {...shardDefaults, ...clusters[clusterIdx]};
     } else {
       throw new Error(
-        `INVALID CONFIG: ${clusters[clusterIdx].units} is invalid. Valid: ${AutoscalerUnits.SHARDS}`,
+        `INVALID CONFIG: ${clusters[clusterIdx].units} is invalid. Valid: ${AutoscalerUnits.SHARDS}, ${AutoscalerUnits.REPLICAS}`,
       );
     }
 

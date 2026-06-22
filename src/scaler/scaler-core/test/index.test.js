@@ -160,6 +160,7 @@ describe('#scaleMemorystoreCluster', () => {
 
   it('should call updateInstance for Valkey engine', async () => {
     cluster.engine = AutoscalerEngine.VALKEY;
+    cluster.units = 'SHARDS';
     memorystoreValkeyClientStub.updateInstance.resolves([expectedOperation]);
     const operationId = await scaleMemorystoreCluster(cluster, suggestedSize);
 
@@ -171,6 +172,22 @@ describe('#scaleMemorystoreCluster', () => {
       updateMask: {paths: ['shard_count']},
     });
     sinon.assert.notCalled(memorystoreRedisClientStub.updateCluster);
+    assert.equals(operationId, expectedOperation.name);
+  });
+
+  it('should call updateInstance with replica_count for Valkey REPLICAS', async () => {
+    cluster.engine = AutoscalerEngine.VALKEY;
+    cluster.units = 'REPLICAS';
+    memorystoreValkeyClientStub.updateInstance.resolves([expectedOperation]);
+    const operationId = await scaleMemorystoreCluster(cluster, 2);
+
+    sinon.assert.calledWith(memorystoreValkeyClientStub.updateInstance, {
+      instance: {
+        name: `projects/${cluster.projectId}/locations/${cluster.regionId}/instances/${cluster.clusterId}`,
+        replicaCount: 2,
+      },
+      updateMask: {paths: ['replica_count']},
+    });
     assert.equals(operationId, expectedOperation.name);
   });
 

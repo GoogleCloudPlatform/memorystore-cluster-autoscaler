@@ -39,7 +39,10 @@ const sanitize = require('sanitize-filename');
 const State = require('./state.js');
 const fs = require('fs');
 const {version: packageVersion} = require('../../../package.json');
-const {AutoscalerEngine} = require('../../autoscaler-common/types');
+const {
+  AutoscalerEngine,
+  AutoscalerUnits,
+} = require('../../autoscaler-common/types');
 
 /**
  * @typedef {import('../../autoscaler-common/types').AutoscalerMemorystoreCluster
@@ -296,6 +299,9 @@ async function getSuggestedSize(cluster) {
  * @return {Promise<?string>} operationID.
  */
 async function scaleMemorystoreCluster(cluster, suggestedSize) {
+  const scalingReplicas = cluster.units === AutoscalerUnits.REPLICAS;
+  const fieldPath = scalingReplicas ? 'replica_count' : 'shard_count';
+
   logger.info({
     message: `----- ${cluster.projectId}/${cluster.regionId}/${cluster.clusterId}: Scaling Memorystore cluster to ${suggestedSize} ${cluster.units} -----`,
     projectId: cluster.projectId,
@@ -304,8 +310,14 @@ async function scaleMemorystoreCluster(cluster, suggestedSize) {
     payload: cluster,
   });
 
+  if (scalingReplicas && cluster.engine !== AutoscalerEngine.VALKEY) {
+    throw new Error(
+      `units=REPLICAS is only supported for engine=VALKEY, got ${cluster.engine}`,
+    );
+  }
+
   const updateMask = {
-    paths: ['shard_count'],
+    paths: [fieldPath],
   };
 
   const requestRedis = {
@@ -319,10 +331,14 @@ async function scaleMemorystoreCluster(cluster, suggestedSize) {
   const requestValkey = {
     instance: {
       name: `projects/${cluster.projectId}/locations/${cluster.regionId}/instances/${cluster.clusterId}`,
-      shardCount: suggestedSize,
     },
     updateMask: updateMask,
   };
+  if (scalingReplicas) {
+    requestValkey.instance.replicaCount = suggestedSize;
+  } else {
+    requestValkey.instance.shardCount = suggestedSize;
+  }
 
   const [operation] =
     cluster.engine === AutoscalerEngine.REDIS

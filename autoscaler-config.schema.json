@@ -41,14 +41,21 @@
           "default": "REDIS"
         },
         "units": {
-          "enum": ["SHARDS"],
-          "description": "Specifies the units how the Cloud Memorystore cluster capacity will be measured.",
+          "enum": ["SHARDS", "REPLICAS"],
+          "description": "SHARDS: scales shard_count. REPLICAS: scales replica_count (REPLICA_CPU, Valkey only).",
           "default": "SHARDS"
+        },
+        "scaleOutCPUThreshold": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "REPLICAS only. Scale out when max replica-role CPU exceeds this value (0–1).",
+          "default": 0.8
         },
         "minSize": {
           "type": "number",
-          "minimum": 1,
-          "description": "Minimum number of Cloud Memorystore cluster `SHARDS` that the instance can be scaled IN to.",
+          "minimum": 0,
+          "description": "Minimum size: SHARDS (min shard count, typically >= 1) or REPLICAS (min replica count, may be 0).",
           "default": "3 SHARDS"
         },
         "maxSize": {

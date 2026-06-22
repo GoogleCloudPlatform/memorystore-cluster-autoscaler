@@ -30,7 +30,10 @@ const firestore = require('@google-cloud/firestore');
 const spanner = require('@google-cloud/spanner');
 const {logger} = require('../../autoscaler-common/logger');
 const assertDefined = require('../../autoscaler-common/assert-defined');
-const {AutoscalerEngine} = require('../../autoscaler-common/types');
+const {
+  AutoscalerEngine,
+  AutoscalerUnits,
+} = require('../../autoscaler-common/types');
 
 /**
  * @typedef {import('../../autoscaler-common/types')
@@ -104,6 +107,19 @@ class State {
     this.regionId = cluster.regionId;
     this.clusterId = cluster.clusterId;
     this.engine = cluster.engine;
+    this.units = cluster.units;
+  }
+
+  /**
+   * Storage key for this cluster (separate keys for SHARDS vs REPLICAS).
+   * @return {string}
+   */
+  getStateKey() {
+    let key = this.getClusterId();
+    if (this.units === AutoscalerUnits.REPLICAS) {
+      key += '/units/REPLICAS';
+    }
+    return key;
   }
 
   /**
@@ -289,7 +305,7 @@ class StateSpanner extends State {
     try {
       const query = {
         columns: STATE_KEY_DEFINITIONS.map((c) => c.name),
-        keySet: {keys: [{values: [{stringValue: this.getClusterId()}]}]},
+        keySet: {keys: [{values: [{stringValue: this.getStateKey()}]}]},
       };
 
       const [rows] = await this.table.read(query);
@@ -391,7 +407,7 @@ class StateSpanner extends State {
    */
   async writeToSpanner(row) {
     try {
-      row.id = this.getClusterId();
+      row.id = this.getStateKey();
       await this.table.upsert(row);
     } catch (e) {
       logger.fatal({
@@ -494,7 +510,7 @@ class StateFirestore extends State {
   get docRef() {
     if (this._docRef == null) {
       this._docRef = this.firestore.doc(
-        `memorystoreClusterAutoscaler/state/${this.getClusterId()}`,
+        `memorystoreClusterAutoscaler/state/${this.getStateKey()}`,
       );
     }
     return this._docRef;
