@@ -55,8 +55,9 @@ async function main() {
 
   try {
     const config = await fs.readFile(configLocation, {encoding: 'utf8'});
+    const configDoc = yaml.load(config);
     const clusters = await pollerCore.checkMemorystoreClusterScaleMetricsLocal(
-      JSON.stringify(yaml.load(config)),
+      JSON.stringify(configDoc),
     );
     for (const cluster of clusters) {
       await scalerCore.scaleMemorystoreClusterLocal(cluster);

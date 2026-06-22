@@ -25,6 +25,8 @@
  */
 const AutoscalerUnits = {
   SHARDS: 'SHARDS',
+  /** Replica count per Memorystore instance (REPLICA_CPU scaling method). */
+  REPLICAS: 'REPLICAS',
 };
 
 /**
@@ -97,6 +99,7 @@ const AutoscalerEngine = {
  *    minFreeMemoryPercent: number,
  *    scaleOutCoolingMinutes: number,
  *    scaleInCoolingMinutes: number,
+ *    scaleOutCPUThreshold?: number,
  *    stateProjectId?: string,
  *    stateDatabase?: StateDatabaseConfig,
  *    scalerPubSubTopic?: string,
